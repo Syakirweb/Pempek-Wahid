@@ -4,7 +4,7 @@ const products = [
     name: 'Pempek Bulat',
     category: 'satuan',
     price: 1000,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80',
+    image: 'images/pempek_bulat.jpg',
     description: 'Pempek bulat lembut yang dibuat dari daging ikan kakap segar, cocok untuk camilan harian.',
   },
   {
@@ -12,7 +12,7 @@ const products = [
     name: 'Pempek Kulit Gepeng',
     category: 'satuan',
     price: 1000,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80',
+    image: 'images/pempek_kulit_gepeng.jpg',
     description: 'Pempek kulit gepeng khas ikan kakap, tekstur kenyal dengan cita rasa gurih yang pas.',
   },
   {
@@ -20,7 +20,7 @@ const products = [
     name: 'Pempek Kulit Lenjer',
     category: 'satuan',
     price: 1000,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80',
+    image: 'images/pempek_kulit_lenjer.jpg',
     description: 'Pempek kulit lenjer berbahan ikan kakap pilihan, rasanya gurih dan tetap lembut.',
   },
   {
@@ -28,7 +28,7 @@ const products = [
     name: 'Pempek Lenjer Putih',
     category: 'satuan',
     price: 1000,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80',
+    image: 'images/pempek_lenjer_putih.jpg',
     description: 'Pempek lenjer putih dengan daging ikan kakap murni, cocok untuk sajian keluarga.',
   },
   {
@@ -36,7 +36,7 @@ const products = [
     name: 'Pempek Telur',
     category: 'satuan',
     price: 1000,
-    image: 'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=800&q=80',
+    image: 'images/pempek_telur.jpg',
     description: 'Pempek telur ikan kakap yang gurih, lembut, dan siap jadi favorit pelanggan.',
   },
 ];
@@ -48,9 +48,11 @@ const cartCountBadge = document.getElementById('cartCountBadge');
 const cartItemsList = document.getElementById('cartItemsList');
 const cartTotalDisplay = document.getElementById('cartTotalDisplay');
 const checkoutWhatsAppBtn = document.getElementById('checkoutWhatsAppBtn');
-const cukoOption = document.getElementById('cukoOption');
 const customerName = document.getElementById('customerName');
 const deliveryNotes = document.getElementById('deliveryNotes');
+const cartOffcanvas = document.getElementById('cartOffcanvas');
+
+const MINIMUM_ORDER = 10;
 
 let cart = [];
 let currentFilter = 'all';
@@ -123,9 +125,21 @@ function attachProductActions() {
   });
 }
 
+function openCartDrawer() {
+  if (!cartOffcanvas) return;
+
+  const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(cartOffcanvas);
+  offcanvas.show();
+}
+
 function addToCart(productId) {
   const product = products.find((item) => item.id === productId);
   if (!product) return;
+
+  if (product.name.toLowerCase().includes('kulit gepeng')) {
+    showToast('Pempek kulit gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lengket dan cepat basi.', 'danger');
+    return;
+  }
 
   const existing = cart.find((item) => item.id === productId);
   if (existing) {
@@ -135,7 +149,21 @@ function addToCart(productId) {
   }
 
   renderCart();
-  showToast(`${product.name} ditambahkan ke keranjang.`);
+  openCartDrawer();
+  showToast(`${product.name} ditambahkan ke keranjang.`, 'success');
+}
+
+function changeCartQty(productId, delta) {
+  const existing = cart.find((item) => item.id === productId);
+  if (!existing) return;
+
+  existing.qty += delta;
+
+  if (existing.qty <= 0) {
+    cart = cart.filter((item) => item.id !== productId);
+  }
+
+  renderCart();
 }
 
 function renderCart() {
@@ -152,31 +180,64 @@ function renderCart() {
 
   cart.forEach((item) => {
     const itemRow = document.createElement('div');
-    itemRow.className = 'd-flex justify-content-between align-items-center border-bottom py-2';
+    itemRow.className = 'd-flex justify-content-between align-items-center border-bottom py-2 gap-3';
     itemRow.innerHTML = `
       <div>
         <div class="fw-semibold">${item.name}</div>
-        <small class="text-muted">${item.qty} pcs • ${formatPrice(item.price)}</small>
+        <small class="text-muted">${formatPrice(item.price)} / pcs</small>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="decrease" data-id="${item.id}" aria-label="Kurangi qty">-</button>
+        <span class="fw-bold text-dark min-width-qty">${item.qty}</span>
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="increase" data-id="${item.id}" aria-label="Tambah qty">+</button>
       </div>
       <div class="fw-bold text-danger">${formatPrice(item.price * item.qty)}</div>
     `;
     cartItemsList.appendChild(itemRow);
   });
 
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  cartCountBadge.textContent = String(cart.reduce((sum, item) => sum + item.qty, 0));
+  cartCountBadge.textContent = String(totalQty);
   cartTotalDisplay.textContent = formatPrice(total);
+
+  if (totalQty < MINIMUM_ORDER) {
+    const minimumNotice = document.createElement('div');
+    minimumNotice.className = 'alert alert-danger rounded-3 small mt-3 mb-0';
+    minimumNotice.innerHTML = `Minimum pemesanan adalah <strong>${MINIMUM_ORDER} pcs</strong>. Saat ini anda baru memilih <strong>${totalQty} pcs</strong>.`;
+    cartItemsList.appendChild(minimumNotice);
+  }
 }
 
-function showToast(message) {
+function showToast(message, type = 'success') {
   const toastMessage = document.getElementById('toastMessage');
   const cartToast = document.getElementById('cartToast');
-  if (!toastMessage || !cartToast) return;
+  const toastIcon = document.getElementById('toastIcon');
+  if (!toastMessage || !cartToast || !toastIcon) return;
 
+  cartToast.classList.remove('text-bg-success', 'text-bg-danger');
+  cartToast.classList.add(type === 'danger' ? 'text-bg-danger' : 'text-bg-success');
+  toastIcon.className = type === 'danger' ? 'bi bi-exclamation-triangle-fill fs-5' : 'bi bi-check-circle-fill fs-5';
   toastMessage.textContent = message;
   const toast = new bootstrap.Toast(cartToast);
   toast.show();
 }
+
+cartItemsList?.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-cart-action]');
+  if (!button) return;
+
+  const productId = Number(button.dataset.id);
+  const action = button.dataset.cartAction;
+
+  if (action === 'increase') {
+    changeCartQty(productId, 1);
+  }
+
+  if (action === 'decrease') {
+    changeCartQty(productId, -1);
+  }
+});
 
 function filterProducts() {
   const keyword = searchInput?.value.toLowerCase().trim() || '';
@@ -210,15 +271,27 @@ document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
 });
 
 checkoutWhatsAppBtn?.addEventListener('click', () => {
-  const itemList = cart.map((item) => `${item.name} x${item.qty}`).join(', ');
+  if (cart.length === 0) {
+    showToast('Keranjang masih kosong. Tambahkan pempek sebelum checkout.', 'danger');
+    openCartDrawer();
+    return;
+  }
+
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+  if (totalQty < MINIMUM_ORDER) {
+    showToast(`Minimum pemesanan adalah ${MINIMUM_ORDER} pcs. Saat ini anda baru memilih ${totalQty} pcs.`, 'danger');
+    openCartDrawer();
+    return;
+  }
+
+  const itemList = cart.map((item) => `- ${item.name} x${item.qty}`).join('\n');
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const cuko = cukoOption?.value || 'Pedas Sedang (Standar)';
   const nama = customerName?.value || 'Pelanggan';
   const catatan = deliveryNotes?.value || '-';
   const message = encodeURIComponent(
-    `Halo Pempek Wahid, saya ingin pesan:\n- ${itemList || 'Belum ada item'}\n- Cuko: ${cuko}\n- Nama: ${nama}\n- Catatan: ${catatan}\n- Total: ${formatPrice(total)}`
+    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${itemList}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatPrice(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Seluruh pemesanan yang dilakukan secara online dikirim dalam kondisi *pempek rebus (tidak digoreng)* untuk menjaga kualitas dan ketahanan produk selama pengiriman. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
   );
-  window.open(`https://wa.me/6281234567890?text=${message}`, '_blank');
+  window.open(`https://wa.me/6288287041072?text=${message}`, '_blank');
 });
 
 renderProducts(products);
