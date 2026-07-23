@@ -1,0 +1,88 @@
+:root {
+  --brand-red: #e53935;
+  --brand-amber: #f4b400;
+  --brand-dark: #1f2937;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #1f2937;
+  background: #fffdf9;
+}
+
+.announcement-bar {
+  background: linear-gradient(90deg, #d62839, #e53935);
+}
+
+.custom-navbar {
+  z-index: 1030;
+}
+
+.brand-title {
+  color: var(--brand-dark);
+}
+
+.text-danger-custom {
+  color: var(--brand-red) !important;
+}
+
+.text-amber {
+  color: var(--brand-amber) !important;
+}
+
+.btn-danger-custom {
+  background: var(--brand-red);
+  border: 1px solid var(--brand-red);
+  color: #fff;
+}
+
+.btn-danger-custom:hover {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
+}
+
+.hero-section {
+  background: linear-gradient(180deg, #fffaf3 0%, #fff 100%);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1.1;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #ef4444, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.product-image {
+  height: 220px;
+  object-fit: cover;
+}
+
+.bg-light-custom {
+  background: #f8fafc;
+}
+
+.bg-dark-custom {
+  background: #111827;
+}
+
+.custom-offcanvas {
+  width: 360px;
+}
+
+.font-xs {
+  font-size: 0.72rem;
+}
