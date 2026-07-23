@@ -142,6 +142,8 @@ function addToCart(productId) {
   }
 
   const existing = cart.find((item) => item.id === productId);
+  const isNewItem = !existing;
+
   if (existing) {
     existing.qty += 1;
   } else {
@@ -149,7 +151,11 @@ function addToCart(productId) {
   }
 
   renderCart();
-  openCartDrawer();
+
+  if (isNewItem) {
+    openCartDrawer();
+  }
+
   showToast(`${product.name} ditambahkan ke keranjang.`, 'success');
 }
 
@@ -289,7 +295,7 @@ checkoutWhatsAppBtn?.addEventListener('click', () => {
   const nama = customerName?.value || 'Pelanggan';
   const catatan = deliveryNotes?.value || '-';
   const message = encodeURIComponent(
-    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${itemList}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatPrice(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Seluruh pemesanan yang dilakukan secara online dikirim dalam kondisi *pempek rebus (tidak digoreng)* untuk menjaga kualitas dan ketahanan produk selama pengiriman. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
+    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${itemList}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n - Total: ${formatPrice(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Seluruh pemesanan yang dilakukan secara online dikirim dalam kondisi *pempek rebus (tidak digoreng)* untuk menjaga kualitas dan ketahanan produk selama pengiriman. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
   );
   window.open(`https://wa.me/6288287041072?text=${message}`, '_blank');
 });
