@@ -38,7 +38,7 @@ const products = [
     category: 'satuan',
     price: 1000,
     image: 'images/pempek_telur.jpg',
-    description: 'Pempek Telur Ikan Kakap yang gurih, lembut, dan siap jadi favorit pelanggan.',
+    description: 'Pempek telur ikan kakap yang gurih, lembut, dan siap jadi favorit pelanggan.',
   },
 ];
 
@@ -53,14 +53,6 @@ const tombolCheckoutWhatsApp = document.getElementById('checkoutWhatsAppBtn');
 const namaPelanggan = document.getElementById('customerName');
 const catatanPengiriman = document.getElementById('deliveryNotes');
 const drawerKeranjang = document.getElementById('cartOffcanvas');
-const formUlasan = document.getElementById('addReviewForm');
-const inputReviewerName = document.getElementById('reviewerName');
-const inputReviewerRating = document.getElementById('reviewerRating');
-const inputReviewerComment = document.getElementById('reviewerComment');
-const reviewsContainer = document.getElementById('reviewsContainer');
-
-// Kunci penyimpanan review sederhana di browser.
-const REVIEW_STORAGE_KEY = 'pempek-wahid-reviews';
 
 // Aturan bisnis: pesanan online minimal harus 10 pcs.
 const PEMESANAN_MINIMAL = 10;
@@ -70,10 +62,93 @@ let keranjang = [];
 
 // Menyimpan filter menu yang saat ini aktif, misalnya semua atau satu kategori.
 let filterSaatIni = 'all';
+let reviewSubmitCooldown = false;
+let lastReviewSubmitTime = 0;
+const REVIEW_COOLDOWN_MS = 15000;
 
 // Mengubah angka biasa menjadi format rupiah yang bisa ditampilkan di halaman.
 function formatHarga(nilai) {
   return `Rp ${nilai.toLocaleString('id-ID')}`;
+}
+
+async function muatUlasan() {
+  const container = document.getElementById('reviewsContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="col-12 text-center text-muted small">Memuat ulasan terbaru...</div>';
+
+  const ulasan = await window.firebaseManager?.loadReviews?.();
+
+  if (!ulasan || ulasan.length === 0) {
+    container.innerHTML = '<div class="col-12"><div class="alert alert-light rounded-4 border">Belum ada ulasan. Jadilah yang pertama menulis review untuk Pempek Wahid.</div></div>';
+    return;
+  }
+
+  container.innerHTML = ulasan.map((item) => `
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <h6 class="fw-bold mb-1">${item.name || 'Pelanggan'}</h6>
+              <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
+            </div>
+            <span class="badge bg-danger-subtle text-danger rounded-pill">${item.rating || 5}/5</span>
+          </div>
+          <p class="text-muted small mb-0">${item.comment || ''}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function kirimUlasan(event) {
+  event.preventDefault();
+
+  const now = Date.now();
+  if (reviewSubmitCooldown && now - lastReviewSubmitTime < REVIEW_COOLDOWN_MS) {
+    tampilkanToast('Tunggu sebentar sebelum mengirim ulasan lagi.', 'danger');
+    return;
+  }
+
+  const form = document.getElementById('addReviewForm');
+  const nama = document.getElementById('reviewerName')?.value?.trim();
+  const rating = document.getElementById('reviewerRating')?.value;
+  const komentar = document.getElementById('reviewerComment')?.value?.trim();
+
+  if (!form || !nama || !komentar) return;
+
+  reviewSubmitCooldown = true;
+  lastReviewSubmitTime = now;
+
+  const tombol = form.querySelector('button[type="submit"]');
+  if (tombol) {
+    tombol.disabled = true;
+    tombol.innerHTML = '<span class="me-2"><i class="bi bi-cloud-arrow-up-fill"></i></span>Menyimpan...';
+  }
+
+  const hasil = await window.firebaseManager?.saveReview?.({
+    name: nama,
+    rating: Number(rating || 5),
+    comment: komentar
+  });
+
+  if (hasil?.ok) {
+    form.reset();
+    tampilkanToast('Ulasan berhasil dikirim dan tersimpan di Firestore.', 'success');
+    await muatUlasan();
+  } else {
+    tampilkanToast(hasil?.error || 'Ulasan gagal dikirim. Periksa konfigurasi Firebase.', 'danger');
+  }
+
+  if (tombol) {
+    tombol.disabled = false;
+    tombol.innerHTML = '<i class="bi bi-send-fill me-1"></i> Kirim Ulasan';
+  }
+
+  setTimeout(() => {
+    reviewSubmitCooldown = false;
+  }, REVIEW_COOLDOWN_MS);
 }
 
 // Menampilkan daftar produk ke dalam grid katalog.
@@ -261,41 +336,6 @@ function tampilkanToast(pesan, tipe = 'success') {
   toast.show();
 }
 
-function simpanReview(review) {
-  const reviews = JSON.parse(localStorage.getItem(REVIEW_STORAGE_KEY) || '[]');
-  reviews.unshift(review);
-  localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviews.slice(0, 20)));
-}
-
-function ambilSemuaReview() {
-  return JSON.parse(localStorage.getItem(REVIEW_STORAGE_KEY) || '[]');
-}
-
-function tampilkanReview() {
-  if (!reviewsContainer) return;
-
-  const reviews = ambilSemuaReview();
-  if (!reviews.length) {
-    reviewsContainer.innerHTML = '<div class="col-12"><div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center"><p class="mb-0 text-muted">Belum ada ulasan. Jadilah yang pertama memberi penilaian!</p></div></div>';
-    return;
-  }
-
-  reviewsContainer.innerHTML = reviews.map((review) => `
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h6 class="fw-bold mb-1">${review.name}</h6>
-            <small class="text-muted">${new Date(review.date).toLocaleDateString('id-ID')}</small>
-          </div>
-          <span class="badge bg-warning text-dark rounded-pill">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</span>
-        </div>
-        <p class="text-muted small mb-0">${review.comment}</p>
-      </div>
-    </div>
-  `).join('');
-}
-
 daftarItemKeranjang?.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-cart-action]');
   if (!button) return;
@@ -347,6 +387,9 @@ document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
   bootstrap.Modal.getInstance(document.getElementById('productModal'))?.hide();
 });
 
+// Saat form review dikirim, simpan ke Firestore.
+document.getElementById('addReviewForm')?.addEventListener('submit', kirimUlasan);
+
 // Saat tombol checkout di klik, cek syarat minimum order lalu kirim pesanan ke WhatsApp.
 tombolCheckoutWhatsApp?.addEventListener('click', () => {
   if (keranjang.length === 0) {
@@ -367,33 +410,11 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
   const nama = namaPelanggan?.value || 'Pelanggan';
   const catatan = catatanPengiriman?.value || '-';
   const pesan = encodeURIComponent(
-    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${daftarPesanan}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatHarga(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Seluruh pemesanan yang dilakukan secara online dikirim dalam kondisi *pempek rebus (tidak digoreng)* untuk menjaga kualitas dan ketahanan produk selama pengiriman. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
+    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${daftarPesanan}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatHarga(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Untuk pemesanan di area sekitar Palembang, pempek disiapkan dalam kondisi *rebus (tidak digoreng)* untuk menjaga kualitas selama pengantaran. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
   );
   window.open(`https://wa.me/6288287041072?text=${pesan}`, '_blank');
 });
 
-formUlasan?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!inputReviewerName || !inputReviewerRating || !inputReviewerComment) return;
-
-  const review = {
-    name: inputReviewerName.value.trim() || 'Anonim',
-    rating: Number(inputReviewerRating.value) || 5,
-    comment: inputReviewerComment.value.trim(),
-    date: new Date().toISOString(),
-  };
-
-  if (!review.comment) {
-    tampilkanToast('Mohon isi komentar ulasan terlebih dahulu.', 'danger');
-    return;
-  }
-
-  simpanReview(review);
-  tampilkanReview();
-  formUlasan.reset();
-  tampilkanToast('Ulasan berhasil disimpan.', 'success');
-});
-
 tampilkanProduk(products);
 tampilkanKeranjang();
-tampilkanReview();
+muatUlasan();
