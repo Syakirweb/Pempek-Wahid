@@ -52,7 +52,7 @@ async function muatUlasan() {
 
     if (!ulasan || ulasan.length === 0) {
       container.innerHTML = '<div class="col-12"><div class="alert alert-light rounded-4 border">Belum ada ulasan. Jadilah yang pertama menulis review untuk Pempek Wahid.</div></div>';
-      return;
+      return;   
     }
 
     container.innerHTML = ulasan.map((item) => `
