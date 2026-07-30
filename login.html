@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Admin - Pempek Wahid</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #fff7f2, #ffe7e7);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="card border-0 shadow-lg rounded-4 p-4" style="max-width: 420px; width: 100%;">
+      <h3 class="fw-bold mb-2">Login Admin</h3>
+      <p class="text-muted small mb-4">Masukkan akun admin tunggal untuk mengakses panel review.</p>
+      <form id="adminLoginForm">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Email</label>
+          <input type="email" id="adminEmail" class="form-control" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Password</label>
+          <input type="password" id="adminPassword" class="form-control" required />
+        </div>
+        <button type="submit" id="loginBtn" class="btn btn-danger-custom w-100 rounded-pill">Masuk</button>
+      </form>
+      <p id="loginMessage" class="small mt-3 mb-0 text-danger"></p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script>
+    const form = document.getElementById('adminLoginForm');
+    const emailInput = document.getElementById('adminEmail');
+    const passwordInput = document.getElementById('adminPassword');
+    const message = document.getElementById('loginMessage');
+    const loginBtn = document.getElementById('loginBtn');
+
+    // Jika sudah login di Firebase, langsung ke halaman admin
+    window.firebaseManager?.onAuthStateChanged?.((user) => {
+      if (user) {
+        localStorage.setItem('adminLoggedIn', 'true');
+        window.location.href = 'admin.html';
+      }
+    });
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      message.textContent = '';
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        message.textContent = 'Email dan password wajib diisi.';
+        return;
+      }
+
+      // Tampilkan loading state pada tombol
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Memproses...';
+
+      try {
+        // firebase.js sudah menerjemahkan error ke Bahasa Indonesia
+        const result = await window.firebaseManager?.signIn?.(email, password);
+        if (result?.ok) {
+          localStorage.setItem('adminLoggedIn', 'true');
+          window.location.href = 'admin.html';
+        } else {
+          // Pesan error sudah dalam Bahasa Indonesia dari terjemahkanErrorAuth()
+          message.textContent = result?.error || 'Login gagal. Periksa email dan password Anda.';
+        }
+      } catch (error) {
+        console.error('[Login] Unexpected error:', error);
+        message.textContent = 'Terjadi kesalahan tak terduga. Coba lagi.';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Masuk';
+      }
+    });
+  </script>
+</body>
+</html>

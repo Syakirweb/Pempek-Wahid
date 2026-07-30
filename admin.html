@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Review - Pempek Wahid</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="container py-5">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="admin-stat-icon"><i class="bi bi-chat-square-text-fill"></i></span>
+            <h2 class="fw-bold mb-0">Panel Admin Review</h2>
+          </div>
+          <p class="text-muted mb-0">Kelola ulasan pelanggan dengan tampilan yang lebih rapi, cepat, dan nyaman.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-outline-secondary rounded-pill" onclick="logoutAdmin()">Logout</button>
+          <a href="index.html" class="btn btn-outline-secondary rounded-pill">Kembali ke Home</a>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active fw-bold" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-pane" type="button" role="tab">Ulasan Pelanggan</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button" role="tab">Kelola Menu</button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="adminTabsContent">
+        <!-- TAB 1: Ulasan Pelanggan -->
+        <div class="tab-pane fade show active" id="review-pane" role="tabpanel" tabindex="0">
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="card admin-stat-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                  <div>
+                    <div class="text-muted small fw-semibold">Total Review</div>
+                    <div id="adminTotalReviews" class="fs-3 fw-bold text-danger-custom">0</div>
+                  </div>
+                  <div class="admin-stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card admin-stat-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                  <div>
+                    <div class="text-muted small fw-semibold">Belum Dibalas</div>
+                    <div id="adminPendingReviews" class="fs-3 fw-bold text-warning-emphasis">0</div>
+                  </div>
+                  <div class="admin-stat-icon"><i class="bi bi-hourglass-split"></i></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card admin-stat-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                  <div>
+                    <div class="text-muted small fw-semibold">Sudah Dibalas</div>
+                    <div id="adminRepliedReviews" class="fs-3 fw-bold text-success">0</div>
+                  </div>
+                  <div class="admin-stat-icon"><i class="bi bi-check2-circle"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card admin-page-card mb-4">
+            <div class="card-body">
+              <div class="row g-3 align-items-end">
+                <div class="col-lg-8">
+                  <label for="reviewSearchInput" class="form-label small fw-semibold text-muted">Cari review</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="reviewSearchInput" class="form-control admin-search-box" placeholder="Cari nama atau komentar..." />
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <button type="button" class="btn btn-outline-secondary rounded-pill w-100" onclick="document.getElementById('reviewSearchInput').value=''; applyReviewFilter();">
+                    <i class="bi bi-x-circle me-1"></i> Bersihkan Cari
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="adminReviewStatus" class="alert alert-light rounded-4 border-0 shadow-sm mb-3">Memuat review...</div>
+          <div id="adminReviewList" class="row g-3"></div>
+        </div> <!-- End of Tab 1 -->
+
+        <!-- TAB 2: Kelola Menu -->
+        <div class="tab-pane fade" id="menu-pane" role="tabpanel" tabindex="0">
+          <div class="row g-4">
+            <!-- Form Tambah Menu -->
+            <div class="col-lg-4">
+              <div class="card admin-page-card h-100">
+                <div class="card-body">
+                  <h5 class="fw-bold mb-3" id="menuFormTitle">Tambah Menu Baru</h5>
+                  <form id="menuForm">
+                    <input type="hidden" id="menuId">
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">Nama Menu</label>
+                      <input type="text" id="menuName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">Harga (Rp)</label>
+                      <input type="number" id="menuPrice" class="form-control" required min="0">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">Kategori</label>
+                      <select id="menuCategory" class="form-select" required>
+                        <option value="satuan">Satuan</option>
+                        <option value="paket">Paket</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">Deskripsi</label>
+                      <textarea id="menuDescription" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">Upload Gambar Baru</label>
+                      <input type="file" id="menuImageFile" class="form-control" accept="image/*">
+                      <div class="form-text">Atau masukkan URL/Path gambar lama di bawah:</div>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-semibold text-muted">URL / Path Gambar</label>
+                      <!-- FIXED: removed required — validasi dipindah ke JS -->
+                      <input type="text" id="menuImageUrl" class="form-control" placeholder="Otomatis terisi jika upload file">
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button type="submit" id="saveMenuBtn" class="btn btn-danger-custom w-100 rounded-pill">Simpan Menu</button>
+                      <button type="button" id="cancelEditMenuBtn" class="btn btn-outline-secondary rounded-pill d-none" onclick="resetMenuForm()">Batal</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Daftar Menu -->
+            <div class="col-lg-8">
+              <div class="card admin-page-card h-100">
+                <div class="card-body">
+                  <h5 class="fw-bold mb-3">Daftar Menu Saat Ini</h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Gambar</th>
+                          <th>Nama & Kategori</th>
+                          <th>Harga</th>
+                          <th class="text-end">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="menuTableBody">
+                        <tr><td colspan="4" class="text-center text-muted">Memuat menu...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- End of Tab 2 -->
+      </div> <!-- End of Tabs Content -->
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="adminToast" class="toast align-items-center text-bg-success border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i id="adminToastIcon" class="bi bi-check-circle-fill fs-5"></i>
+          <span id="adminToastMessage">Pesan sukses</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script>
+    // --- GUARD: Cek localStorage terlebih dahulu ---
+    if (localStorage.getItem('adminLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const FALLBACK_IMAGE = 'images/default-pempek.svg';
+
+    let allReviews = [];
+    let allMenus = [];
+    let editingReplyId = null;
+
+    // Simpan referensi unsubscribe untuk realtime listeners
+    let unsubReviews = null;
+    let unsubMenu = null;
+
+    const status = document.getElementById('adminReviewStatus');
+    const list = document.getElementById('adminReviewList');
+    const searchInput = document.getElementById('reviewSearchInput');
+
+    // --- TOAST ---
+    function tampilkanToast(pesan, tipe = 'success') {
+      const toastEl = document.getElementById('adminToast');
+      const ikon = document.getElementById('adminToastIcon');
+      const pesanEl = document.getElementById('adminToastMessage');
+      
+      toastEl.className = `toast align-items-center text-bg-${tipe} border-0 rounded-3 shadow`;
+      ikon.className = tipe === 'danger' ? 'bi bi-exclamation-triangle-fill fs-5' : 'bi bi-check-circle-fill fs-5';
+      pesanEl.textContent = pesan;
+      
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    }
+
+    // --- AUTH ---
+    function logoutAdmin() {
+      // Bersihkan realtime listeners sebelum logout
+      if (unsubReviews) { unsubReviews(); unsubReviews = null; }
+      if (unsubMenu) { unsubMenu(); unsubMenu = null; }
+
+      localStorage.removeItem('adminLoggedIn');
+      window.firebaseManager?.signOut?.();
+      window.location.href = 'login.html';
+    }
+
+    // FIXED: Ganti setInterval polling dengan onIdTokenChanged
+    // onIdTokenChanged dipanggil otomatis oleh Firebase saat:
+    // - User login/logout
+    // - Token di-refresh (setiap ~1 jam)
+    // - Password diubah (token invalidated) → user otomatis null → logout
+    let authInitialized = false;
+    window.firebaseManager?.onIdTokenChanged?.((user) => {
+      if (!authInitialized) {
+        authInitialized = true;
+        if (!user) {
+          console.warn('[Auth] Tidak ada sesi aktif. Redirect ke login.');
+          logoutAdmin();
+        } else {
+          console.log('[Auth] Sesi aktif ditemukan:', user.email);
+          // Mulai realtime listeners setelah auth dikonfirmasi
+          startRealtimeListeners();
+        }
+      } else {
+        // Perubahan state setelah halaman berjalan
+        if (!user) {
+          console.warn('[Auth] Sesi berakhir (password berubah / token revoked). Logging out.');
+          logoutAdmin();
+        }
+      }
+    });
+
+    // --- UTILITY ---
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatReviewDate(value) {
+      if (!value) return 'Belum ada data';
+
+      if (typeof value.toDate === 'function') {
+        return value.toDate().toLocaleString('id-ID', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+      }
+
+      if (typeof value === 'string') {
+        return new Date(value).toLocaleString('id-ID', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+      }
+
+      return 'Belum ada data';
+    }
+
+    // --- REVIEW MANAGEMENT ---
+    function updateStats(reviews) {
+      const total = reviews.length;
+      const pending = reviews.filter((item) => !item.reply).length;
+      const replied = reviews.filter((item) => item.reply).length;
+
+      document.getElementById('adminTotalReviews').textContent = total;
+      document.getElementById('adminPendingReviews').textContent = pending;
+      document.getElementById('adminRepliedReviews').textContent = replied;
+    }
+
+    function bindReviewActions() {
+      document.querySelectorAll('.delete-review-btn').forEach((button) => {
+        button.addEventListener('click', () => deleteReview(button.dataset.reviewId));
+      });
+
+      document.querySelectorAll('.save-reply-btn').forEach((button) => {
+        button.addEventListener('click', () => saveReply(button.dataset.reviewId));
+      });
+
+      document.querySelectorAll('.edit-reply-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          editingReplyId = button.dataset.reviewId;
+          applyReviewFilter();
+        });
+      });
+
+      document.querySelectorAll('.delete-reply-btn').forEach((button) => {
+        button.addEventListener('click', () => deleteReply(button.dataset.reviewId));
+      });
+
+      document.querySelectorAll('.cancel-reply-edit-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          editingReplyId = null;
+          applyReviewFilter();
+        });
+      });
+    }
+
+    function applyReviewFilter() {
+      const keyword = searchInput?.value?.trim().toLowerCase() || '';
+      const filtered = allReviews.filter((item) => {
+        const text = `${item.name || ''} ${item.comment || ''} ${item.reply || ''}`.toLowerCase();
+        return text.includes(keyword);
+      });
+
+      renderReviews(filtered);
+    }
+
+    function renderReviews(reviews) {
+      list.innerHTML = '';
+
+      if (!reviews || reviews.length === 0) {
+        list.innerHTML = `
+          <div class="col-12">
+            <div class="card admin-empty-state">
+              <h5 class="fw-bold mb-2">Belum ada ulasan yang cocok</h5>
+              <p class="text-muted mb-0">Coba ubah kata pencarian atau tunggu ulasan pelanggan baru.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = reviews.map((item) => `
+        <div class="col-12">
+          <div class="card admin-review-card">
+            <div class="card-body">
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-2 mb-3">
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <h6 class="fw-bold mb-0">${escapeHtml(item.name || 'Pelanggan')}</h6>
+                    <span class="admin-review-badge ${item.reply ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning-emphasis'}">
+                      <i class="bi ${item.reply ? 'bi-check2-circle' : 'bi-hourglass-split'}"></i>
+                      ${item.reply ? 'Sudah dibalas' : 'Belum dibalas'}
+                    </span>
+                  </div>
+                  <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
+                  <div class="text-muted small mt-1">${escapeHtml(formatReviewDate(item.createdAt))}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger admin-action-btn delete-review-btn" data-review-id="${escapeHtml(item.id || '')}">
+                  <i class="bi bi-trash3 me-1"></i> Hapus Review
+                </button>
+              </div>
+
+              <p class="text-muted mb-3">${escapeHtml(item.comment || '')}</p>
+
+              <div class="admin-reply-area">
+                <label class="form-label small fw-semibold text-muted">Balasan admin</label>
+                ${item.reply && editingReplyId !== item.id ? `
+                  <div class="border rounded-3 p-3 bg-white">
+                    <p class="mb-3 text-dark">${escapeHtml(item.reply)}</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                      <button class="btn btn-sm btn-outline-secondary admin-action-btn edit-reply-btn" data-review-id="${escapeHtml(item.id || '')}">
+                        <i class="bi bi-pencil-square me-1"></i> Edit Balasan
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger admin-action-btn delete-reply-btn" data-review-id="${escapeHtml(item.id || '')}">
+                        <i class="bi bi-trash3 me-1"></i> Hapus Balasan
+                      </button>
+                    </div>
+                  </div>
+                ` : `
+                  <textarea class="form-control" rows="3" id="reply-${escapeHtml(item.id || '')}" placeholder="Tulis balasan untuk pelanggan...">${escapeHtml(item.reply || '')}</textarea>
+                  <div class="d-flex justify-content-between align-items-center gap-2 mt-3 flex-wrap">
+                    <small class="text-muted">${item.reply ? 'Anda sedang mengedit balasan yang sudah ada.' : 'Belum ada balasan untuk ulasan ini.'}</small>
+                    <div class="d-flex gap-2 flex-wrap">
+                      ${item.reply ? `
+                        <button class="btn btn-sm btn-outline-secondary admin-action-btn cancel-reply-edit-btn" data-review-id="${escapeHtml(item.id || '')}">
+                          <i class="bi bi-x-circle me-1"></i> Batal
+                        </button>
+                      ` : ''}
+                      <button class="btn btn-sm btn-danger-custom admin-action-btn save-reply-btn" data-review-id="${escapeHtml(item.id || '')}">
+                        <i class="bi bi-send-fill me-1"></i> ${item.reply ? 'Simpan Perubahan' : 'Simpan Balasan'}
+                      </button>
+                    </div>
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      bindReviewActions();
+    }
+
+    // FIXED: Menggunakan realtime listener (onSnapshot) bukan one-time fetch
+    function startRealtimeListeners() {
+      // --- Reviews Realtime ---
+      if (unsubReviews) unsubReviews();
+      status.innerHTML = '<span class="text-muted">Memuat review...</span>';
+      
+      unsubReviews = window.firebaseManager?.onSnapshotReviews?.((reviews) => {
+        allReviews = Array.isArray(reviews) ? reviews : [];
+        updateStats(allReviews);
+
+        if (!allReviews.length) {
+          status.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
+          renderReviews([]);
+          return;
+        }
+
+        status.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi. <small class="text-muted">(Realtime)</small></span>`;
+        applyReviewFilter();
+      });
+
+      // Fallback jika onSnapshotReviews tidak tersedia
+      if (!unsubReviews) {
+        loadReviewsFallback();
+      }
+
+      // --- Menu Realtime ---
+      if (unsubMenu) unsubMenu();
+
+      unsubMenu = window.firebaseManager?.onSnapshotMenu?.((menus) => {
+        allMenus = Array.isArray(menus) ? menus : [];
+        renderMenuTable();
+      });
+
+      // Fallback jika onSnapshotMenu tidak tersedia
+      if (!unsubMenu) {
+        initMenuFallback();
+      }
+    }
+
+    // Fallback untuk browser/kondisi di mana realtime listener gagal
+    async function loadReviewsFallback() {
+      try {
+        const reviews = await window.firebaseManager?.loadReviews?.();
+        allReviews = Array.isArray(reviews) ? reviews : [];
+        updateStats(allReviews);
+        if (!allReviews.length) {
+          status.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
+          renderReviews([]);
+        } else {
+          status.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi.</span>`;
+          applyReviewFilter();
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal memuat review:', error);
+        status.innerHTML = '<span class="text-danger">Gagal memuat review.</span>';
+      }
+    }
+
+    async function initMenuFallback() {
+      try {
+        allMenus = await window.firebaseManager?.loadMenu?.() || [];
+        renderMenuTable();
+      } catch (error) {
+        console.error('[Admin] Gagal memuat menu:', error);
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!id) {
+        tampilkanToast('ID review tidak ditemukan.', 'danger');
+        return;
+      }
+
+      const confirmed = confirm('Yakin ingin menghapus review ini?');
+      if (!confirmed) return;
+
+      try {
+        const result = await window.firebaseManager?.deleteReview?.(id);
+        if (result?.ok) {
+          tampilkanToast('Review berhasil dihapus.');
+          // Data akan otomatis diupdate oleh onSnapshot listener
+        } else {
+          tampilkanToast(result?.error || 'Gagal menghapus review.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal menghapus review:', error);
+        tampilkanToast('Terjadi kesalahan saat menghapus review.', 'danger');
+      }
+    }
+
+    async function saveReply(id) {
+      const textarea = document.getElementById(`reply-${id}`);
+      const reply = textarea?.value?.trim() || '';
+      const button = document.querySelector(`.save-reply-btn[data-review-id="${id}"]`);
+
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Menyimpan...';
+      }
+
+      try {
+        const result = await window.firebaseManager?.updateReviewReply?.(id, reply);
+        if (result?.ok) {
+          editingReplyId = null;
+          tampilkanToast('Balasan berhasil disimpan.');
+          // Data akan otomatis diupdate oleh onSnapshot listener
+        } else {
+          tampilkanToast(result?.error || 'Gagal menyimpan balasan.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal menyimpan balasan:', error);
+        tampilkanToast('Terjadi kesalahan saat menyimpan balasan.', 'danger');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = '<i class="bi bi-send-fill me-1"></i> Simpan Balasan';
+        }
+      }
+    }
+
+    async function deleteReply(id) {
+      if (!id) {
+        tampilkanToast('ID review tidak ditemukan.', 'danger');
+        return;
+      }
+
+      const confirmed = confirm('Yakin ingin menghapus balasan ini?');
+      if (!confirmed) return;
+
+      try {
+        const result = await window.firebaseManager?.updateReviewReply?.(id, '');
+        if (result?.ok) {
+          editingReplyId = null;
+          tampilkanToast('Balasan berhasil dihapus.');
+          // Data akan otomatis diupdate oleh onSnapshot listener
+        } else {
+          tampilkanToast(result?.error || 'Gagal menghapus balasan.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal menghapus balasan:', error);
+        tampilkanToast('Terjadi kesalahan saat menghapus balasan.', 'danger');
+      }
+    }
+
+    // --- MENU MANAGEMENT ---
+    function renderMenuTable() {
+      const tbody = document.getElementById('menuTableBody');
+      if (!allMenus.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada data menu.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allMenus.map(m => `
+        <tr>
+          <td>
+            <img src="${escapeHtml(m.image || '')}" alt="${escapeHtml(m.name)}" class="rounded-3 shadow-sm" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+          </td>
+          <td>
+            <div class="fw-bold">${escapeHtml(m.name)}</div>
+            <span class="badge bg-secondary">${escapeHtml(m.category)}</span>
+          </td>
+          <td class="fw-semibold text-danger-custom">Rp ${Number(m.price).toLocaleString('id-ID')}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary rounded-pill me-1" onclick="editMenu('${escapeHtml(String(m.id))}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteMenuAction('${escapeHtml(String(m.id))}')"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // FIXED: Validasi gambar dipindah ke JS — required dihapus dari HTML
+    document.getElementById('menuForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('saveMenuBtn');
+      const fileInput = document.getElementById('menuImageFile');
+      let imageUrl = document.getElementById('menuImageUrl').value.trim();
+
+      // Validasi: harus ada file ATAU URL
+      if (fileInput.files.length === 0 && !imageUrl) {
+        tampilkanToast('Pilih file gambar atau masukkan URL gambar.', 'danger');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
+
+      try {
+        // Upload jika ada file baru dipilih
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const uploadRes = await window.firebaseManager?.uploadImage(file);
+          if (uploadRes?.ok) {
+            imageUrl = uploadRes.url;
+            tampilkanToast('Gambar berhasil diunggah.');
+          } else {
+            tampilkanToast(uploadRes?.error || 'Gagal mengunggah gambar', 'danger');
+            return; // Hentikan proses jika upload gagal
+          }
+        }
+
+        const productData = {
+          name: document.getElementById('menuName').value.trim(),
+          price: Number(document.getElementById('menuPrice').value),
+          category: document.getElementById('menuCategory').value,
+          description: document.getElementById('menuDescription').value.trim(),
+          image: imageUrl
+        };
+
+        const id = document.getElementById('menuId').value || null;
+        const result = await window.firebaseManager?.saveMenu?.(productData, id);
+
+        if (result?.ok) {
+          tampilkanToast('Menu berhasil disimpan!');
+          resetMenuForm();
+          // Data akan otomatis diupdate oleh onSnapshot listener
+        } else {
+          tampilkanToast(result?.error || 'Gagal menyimpan menu.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal menyimpan menu:', error);
+        tampilkanToast('Terjadi kesalahan saat menyimpan menu.', 'danger');
+      } finally {
+        // FIXED: Tombol SELALU dikembalikan ke kondisi aktif
+        btn.disabled = false;
+        btn.innerHTML = 'Simpan Menu';
+      }
+    });
+
+    function editMenu(id) {
+      const m = allMenus.find(x => String(x.id) === String(id));
+      if (!m) return;
+      
+      document.getElementById('menuId').value = m.id;
+      document.getElementById('menuName').value = m.name;
+      document.getElementById('menuPrice').value = m.price;
+      document.getElementById('menuCategory').value = m.category;
+      document.getElementById('menuDescription').value = m.description || '';
+      document.getElementById('menuImageUrl').value = m.image || '';
+      document.getElementById('menuFormTitle').textContent = 'Edit Menu';
+      document.getElementById('cancelEditMenuBtn').classList.remove('d-none');
+      
+      // Beralih ke tab menu jika sedang tidak di sana
+      const tab = new bootstrap.Tab(document.getElementById('menu-tab'));
+      tab.show();
+    }
+
+    function resetMenuForm() {
+      document.getElementById('menuForm').reset();
+      document.getElementById('menuId').value = '';
+      document.getElementById('menuFormTitle').textContent = 'Tambah Menu Baru';
+      document.getElementById('cancelEditMenuBtn').classList.add('d-none');
+    }
+
+    // Renamed dari deleteMenu agar tidak konflik dengan firebaseManager.deleteMenu
+    async function deleteMenuAction(id) {
+      if (!confirm('Yakin ingin menghapus menu ini?')) return;
+
+      try {
+        const result = await window.firebaseManager?.deleteMenu?.(id);
+        if (result?.ok) {
+          tampilkanToast('Menu berhasil dihapus.');
+          // Data akan otomatis diupdate oleh onSnapshot listener
+        } else {
+          tampilkanToast(result?.error || 'Gagal menghapus menu.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal menghapus menu:', error);
+        tampilkanToast('Terjadi kesalahan saat menghapus menu.', 'danger');
+      }
+    }
+
+    searchInput?.addEventListener('input', applyReviewFilter);
+  </script>
+</body>
+</html>
