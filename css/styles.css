@@ -335,3 +335,33 @@ html {
 .admin-action-btn:hover {
   transform: translateY(-1px);
 }
+
+.admin-confirm-modal {
+  border: 0;
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 70px rgba(66, 33, 11, 0.2);
+}
+
+.admin-confirm-icon {
+  width: 64px;
+  height: 64px;
+  margin-inline: auto;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-primary);
+  background: rgba(98, 43, 20, 0.1);
+  font-size: 1.5rem;
+}
+
+.admin-confirm-modal .btn-danger {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.admin-confirm-modal .btn-danger:hover,
+.admin-confirm-modal .btn-danger:focus {
+  background: #4d1f10;
+  border-color: #4d1f10;
+}
