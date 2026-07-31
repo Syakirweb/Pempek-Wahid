@@ -127,22 +127,11 @@ async function kirimUlasan(event) {
   }
 
   try {
-    // v1.1: Cek apakah ada foto yang diupload
-    let photoUrl = null;
-    const fileInput = document.getElementById('reviewPhotoFile');
-    if (fileInput && fileInput.files.length > 0) {
-      const uploadRes = await window.firebaseManager?.uploadReviewPhoto?.(fileInput.files[0]);
-      if (uploadRes?.ok) {
-        photoUrl = uploadRes.url;
-      }
-    }
-
     const reviewPayload = {
       name: nama,
       rating: Number(rating || 5),
       comment: komentar
     };
-    if (photoUrl) reviewPayload.photoUrl = photoUrl;
 
     const hasil = await window.firebaseManager?.saveReview?.(reviewPayload);
 

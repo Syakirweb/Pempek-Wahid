@@ -262,7 +262,6 @@ function pasangFormUlasan() {
     const nama = document.getElementById('reviewerName')?.value?.trim();
     const komentar = document.getElementById('reviewerComment')?.value?.trim();
     const rating = selectedRating;
-    const photoFileInput = document.getElementById('reviewPhotoFile');
 
     if (!nama || !komentar) {
       tampilkanToast('Harap isi nama dan komentar ulasan Anda.', 'danger');
@@ -277,23 +276,11 @@ function pasangFormUlasan() {
     }
 
     try {
-      // v1.1: Upload foto jika ada file yang dipilih
-      let photoUrl = null;
-      if (photoFileInput && photoFileInput.files.length > 0) {
-        const uploadRes = await window.firebaseManager?.uploadReviewPhoto?.(photoFileInput.files[0]);
-        if (uploadRes?.ok) {
-          photoUrl = uploadRes.url;
-        } else {
-          console.warn('[ReviewPage] Gagal upload foto:', uploadRes?.error);
-        }
-      }
-
       const reviewPayload = {
         name: nama,
         rating: Number(rating),
         comment: komentar
       };
-      if (photoUrl) reviewPayload.photoUrl = photoUrl;
 
       // Memanggil fungsi saveReview
       const result = await window.firebaseManager?.saveReview?.(reviewPayload);
