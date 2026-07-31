@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Pempek Wahid - Pempek Asli Palembang yang murah, lemak, dan besak. Nikmati pempek dengan harga mulai dari Rp 1.000/pcs">
     <title>Pempek Wahid</title>
-    <link rel="icon" type="image/png" href="images/logo.svg">
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,7 +55,11 @@
                     <li class="nav-item"><a class="nav-link" href="#kontak">Kontak & Lokasi</a></li>
                 </ul>
 
-                <div class="d-flex justify-content-center align-items-center gap-3">
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                    <!-- v1.1: Tombol Bagikan Website -->
+                    <button id="shareWebsiteBtn" class="btn btn-outline-secondary rounded-pill px-3 py-2 fw-semibold" title="Bagikan Menu / Website">
+                        <i class="bi bi-share-fill me-1"></i> Bagikan
+                    </button>
                     <button class="btn btn-outline-danger position-relative rounded-pill px-3 py-2 fw-semibold" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
                         <i class="bi bi-cart3 fs-5 me-1"></i> Keranjang
                         <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -230,6 +234,8 @@
                     <div class="card border-0 shadow-sm rounded-4 p-4 mt-4 bg-white">
                         <h5 class="fw-bold mb-3"><i class="bi bi-pencil-square me-2 text-danger"></i>Tulis Ulasan Anda</h5>
                         <form id="addReviewForm">
+                            <!-- v1.1: Anti-spam honeypot — field ini disembunyikan dari pengguna biasa, bot akan mengisinya -->
+                            <input type="text" name="website_url" id="hp_website_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none !important;position:absolute;left:-9999px;">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Nama Anda</label>
                                 <input type="text" id="reviewerName" class="form-control" placeholder="Contoh: Budi Palembang" required>
@@ -240,11 +246,18 @@
                                     <option value="5">⭐⭐⭐⭐⭐ (5/5) Sempurna & Lezat!</option>
                                     <option value="4">⭐⭐⭐⭐ (4/5) Enak Banget</option>
                                     <option value="3">⭐⭐⭐ (3/5) Cukup Baik</option>
+                                    <option value="2">⭐⭐ (2/5) Perlu Ditingkatkan</option>
+                                    <option value="1">⭐ (1/5) Kurang Puas</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Komentar / Kesan</label>
                                 <textarea id="reviewerComment" class="form-control" rows="3" placeholder="Pempeknya empuk, ikan kakapnya berasa banget, cuko kental harga seribu..." required></textarea>
+                            </div>
+                            <!-- v1.1: Upload foto ulasan (opsional) -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Foto Ulasan <span class="text-muted fw-normal">(opsional)</span></label>
+                                <input type="file" id="reviewPhotoFile" class="form-control form-control-sm" accept="image/*">
                             </div>
                             <button type="submit" class="btn btn-danger-custom w-100 rounded-pill py-2 fw-semibold">
                                 <i class="bi bi-send-fill me-1"></i> Kirim Ulasan
@@ -253,9 +266,14 @@
                     </div>
                 </div>
 
-                <div class="col-lg-7">
+                <div class="col-lg-7 d-flex flex-column">
                     <div class="row g-3" id="reviewsContainer">
                         <!-- Reviews dynamically populated -->
+                    </div>
+                    <div class="mt-4 text-center text-lg-start">
+                        <a href="reviews.html" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold shadow-sm">
+                            <i class="bi bi-chat-left-text-fill me-2"></i>Lihat Semua / Tulis Ulasan
+                        </a>
                     </div>
                 </div>
             </div>
@@ -337,6 +355,27 @@
                 <div class="mb-3">
                     <label class="form-label small fw-semibold">Nama Pemesan</label>
                     <input type="text" id="customerName" class="form-control form-control-sm" placeholder="Nama Anda (cth: Ani)">
+                </div>
+
+                <!-- v1.1: Metode Pengiriman radio button -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Metode Pengiriman</label>
+                    <div class="d-flex flex-column gap-2" id="deliveryMethodGroup">
+                        <label class="delivery-option-card d-flex align-items-center gap-2" id="deliveryCard_pickup">
+                            <input type="radio" name="deliveryMethod" id="deliveryPickup" value="ambil_sendiri" class="form-check-input mt-0" checked>
+                            <div>
+                                <div class="fw-semibold small"><i class="bi bi-shop-window me-1 text-danger"></i>Ambil Sendiri ke Outlet</div>
+                                <div class="text-muted" style="font-size:0.75rem;">Ambil langsung di Jl. Setunggal No.2</div>
+                            </div>
+                        </label>
+                        <label class="delivery-option-card d-flex align-items-center gap-2" id="deliveryCard_courier">
+                            <input type="radio" name="deliveryMethod" id="deliveryCourier" value="kirim_ojol" class="form-check-input mt-0">
+                            <div>
+                                <div class="fw-semibold small"><i class="bi bi-truck me-1 text-success"></i>Kirim via Kurir / Ojol</div>
+                                <div class="text-muted" style="font-size:0.75rem;">Ongkos kirim ditanggung pembeli</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="mb-3">

@@ -87,7 +87,7 @@
     }
   }
 
-  async function loadReviews() {
+  async function loadReviews(limitCount = null) {
     const { db, firestoreReady } = initFirebase();
     if (!firestoreReady || !db) {
       console.error('[Firestore] Tidak bisa loadReviews: Firestore belum siap.');
@@ -95,7 +95,11 @@
     }
 
     try {
-      const snapshot = await db.collection('reviews').get();
+      let query = db.collection('reviews');
+      if (limitCount) {
+        query = query.limit(limitCount);
+      }
+      const snapshot = await query.get();
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       // Urutkan secara lokal berdasarkan createdAt descending
       data.sort((a, b) => {
@@ -111,8 +115,8 @@
     }
   }
 
-  // Realtime listener untuk reviews (digunakan di admin panel)
-  function onSnapshotReviews(callback) {
+  // Realtime listener untuk reviews (dengan opsional limitCount)
+  function onSnapshotReviews(callback, limitCount = null) {
     const { db, firestoreReady } = initFirebase();
     if (!firestoreReady || !db) {
       console.error('[Firestore] Tidak bisa onSnapshotReviews: Firestore belum siap.');
@@ -120,7 +124,12 @@
       return () => {};
     }
 
-    return db.collection('reviews').onSnapshot(
+    let query = db.collection('reviews');
+    if (limitCount) {
+      query = query.limit(limitCount);
+    }
+
+    return query.onSnapshot(
       (snapshot) => {
         const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         data.sort((a, b) => {
@@ -243,6 +252,22 @@
     }
   }
 
+  async function updateProductStock(id, isSoldOut) {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) return { ok: false, error: 'Firestore belum siap.' };
+
+    try {
+      await db.collection('products').doc(id).update({
+        isSoldOut: Boolean(isSoldOut),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return { ok: true };
+    } catch (error) {
+      console.error('Gagal memperbarui status stok:', error);
+      return { ok: false, error: error.message };
+    }
+  }
+
   async function uploadImage(file) {
     const { storage } = initFirebase();
     if (!storage) return { ok: false, error: 'Firebase Storage SDK tidak ditemukan.' };
@@ -254,7 +279,23 @@
       const url = await fileRef.getDownloadURL();
       return { ok: true, url };
     } catch (error) {
-      console.error('Gagal mengunggah gambar:', error);
+      console.error('Gagal mengunggah gambar produk:', error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  async function uploadReviewPhoto(file) {
+    const { storage } = initFirebase();
+    if (!storage) return { ok: false, error: 'Firebase Storage SDK tidak ditemukan.' };
+
+    try {
+      const storageRef = storage.ref();
+      const fileRef = storageRef.child(`review_photos/${Date.now()}_${file.name}`);
+      await fileRef.put(file);
+      const url = await fileRef.getDownloadURL();
+      return { ok: true, url };
+    } catch (error) {
+      console.error('Gagal mengunggah foto ulasan:', error);
       return { ok: false, error: error.message };
     }
   }
@@ -331,7 +372,9 @@
     loadMenu,
     saveMenu,
     deleteMenu,
+    updateProductStock,
     uploadImage,
+    uploadReviewPhoto,
     signIn,
     signOut,
     onAuthStateChanged,

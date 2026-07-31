@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Review - Pempek Wahid</title>
+  <title>Admin Panel - Pempek Wahid</title>
+  <link rel="icon" type="image/svg+xml" href="images/logo.svg" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="css/styles.css" rel="stylesheet" />
@@ -13,89 +14,186 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-Q04TMMKB68');
-</script>
+  </script>
+  <style>
+    /* v1.1 Admin Extra Styles */
+    .admin-dashboard-stat {
+      border: 0;
+      border-radius: 1.25rem;
+      background: linear-gradient(135deg, #fff5ea 0%, #fffdf8 100%);
+      box-shadow: 0 12px 28px rgba(98, 43, 20, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .admin-dashboard-stat:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 38px rgba(98, 43, 20, 0.12);
+    }
+    .stat-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .filter-bar { gap: 0.5rem; }
+    .filter-bar .btn { font-size: 0.82rem; }
+    .view-toggle-btn.active { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
+    .admin-grid-card {
+      border: 0;
+      border-radius: 1rem;
+      box-shadow: 0 8px 20px rgba(98, 43, 20, 0.08);
+      transition: transform 0.2s ease;
+    }
+    .admin-grid-card:hover { transform: translateY(-2px); }
+    .admin-grid-card img {
+      height: 140px;
+      object-fit: cover;
+      border-radius: 0.75rem 0.75rem 0 0;
+    }
+    .stock-toggle-label { font-size: 0.78rem; font-weight: 600; }
+    .form-switch .form-check-input { cursor: pointer; }
+  </style>
 </head>
 <body>
   <div class="admin-shell">
     <div class="container py-5">
+      <!-- Header -->
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="admin-stat-icon"><i class="bi bi-chat-square-text-fill"></i></span>
-            <h2 class="fw-bold mb-0">Panel Admin Review</h2>
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <img src="images/logo.svg" alt="Logo Pempek Wahid" class="admin-brand-logo">
+            <div>
+              <h2 class="fw-bold mb-0">Panel Admin</h2>
+              <p class="text-muted mb-0 small">Pempek Wahid — Kelola Produk & Ulasan</p>
+            </div>
           </div>
-          <p class="text-muted mb-0">Kelola ulasan pelanggan dengan tampilan yang lebih rapi, cepat, dan nyaman.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-          <button class="btn btn-outline-secondary rounded-pill" onclick="logoutAdmin()">Logout</button>
-          <a href="index.html" class="btn btn-outline-secondary rounded-pill">Kembali ke Home</a>
+          <button class="btn btn-outline-secondary rounded-pill" onclick="logoutAdmin()">
+            <i class="bi bi-box-arrow-right me-1"></i>Logout
+          </button>
+          <a href="index.html" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-house-door me-1"></i>Kembali ke Home
+          </a>
+        </div>
+      </div>
+
+      <!-- v1.1: 4 Dashboard Stat Cards -->
+      <div class="row g-3 mb-4" id="dashboardStats">
+        <div class="col-6 col-md-3">
+          <div class="card admin-dashboard-stat h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+              <div class="stat-icon-box bg-danger-subtle text-danger"><i class="bi bi-box-seam-fill"></i></div>
+              <div>
+                <div class="text-muted small fw-semibold">Total Produk</div>
+                <div id="statTotalProducts" class="fs-3 fw-bold text-danger-custom">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card admin-dashboard-stat h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+              <div class="stat-icon-box bg-warning-subtle text-warning-emphasis"><i class="bi bi-slash-circle-fill"></i></div>
+              <div>
+                <div class="text-muted small fw-semibold">Stok Habis</div>
+                <div id="statSoldOut" class="fs-3 fw-bold text-warning-emphasis">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card admin-dashboard-stat h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+              <div class="stat-icon-box bg-danger-subtle text-danger"><i class="bi bi-chat-dots-fill"></i></div>
+              <div>
+                <div class="text-muted small fw-semibold">Total Ulasan</div>
+                <div id="statTotalReviews" class="fs-3 fw-bold text-danger-custom">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card admin-dashboard-stat h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+              <div class="stat-icon-box" style="background:rgba(250,171,112,0.15);color:#b36b00;"><i class="bi bi-hourglass-split"></i></div>
+              <div>
+                <div class="text-muted small fw-semibold">Belum Dibalas</div>
+                <div id="statPendingReviews" class="fs-3 fw-bold" style="color:#b36b00;">0</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Tab Navigation -->
       <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active fw-bold" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-pane" type="button" role="tab">Ulasan Pelanggan</button>
+          <button class="nav-link active fw-bold" id="review-tab" data-bs-toggle="tab" data-bs-target="#review-pane" type="button" role="tab">
+            <i class="bi bi-chat-left-text me-1"></i>Kelola Ulasan
+          </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link fw-bold" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button" role="tab">Kelola Menu</button>
+          <button class="nav-link fw-bold" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button" role="tab">
+            <i class="bi bi-grid-3x3-gap me-1"></i>Kelola Katalog
+          </button>
         </li>
       </ul>
 
       <div class="tab-content" id="adminTabsContent">
-        <!-- TAB 1: Ulasan Pelanggan -->
+        <!-- ========== TAB 1: Kelola Ulasan ========== -->
         <div class="tab-pane fade show active" id="review-pane" role="tabpanel" tabindex="0">
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <div class="text-muted small fw-semibold">Total Review</div>
-                    <div id="adminTotalReviews" class="fs-3 fw-bold text-danger-custom">0</div>
-                  </div>
-                  <div class="admin-stat-icon"><i class="bi bi-chat-dots-fill"></i></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <div class="text-muted small fw-semibold">Belum Dibalas</div>
-                    <div id="adminPendingReviews" class="fs-3 fw-bold text-warning-emphasis">0</div>
-                  </div>
-                  <div class="admin-stat-icon"><i class="bi bi-hourglass-split"></i></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card admin-stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <div class="text-muted small fw-semibold">Sudah Dibalas</div>
-                    <div id="adminRepliedReviews" class="fs-3 fw-bold text-success">0</div>
-                  </div>
-                  <div class="admin-stat-icon"><i class="bi bi-check2-circle"></i></div>
-                </div>
-              </div>
-            </div>
-          </div>
 
+          <!-- Review Filter Bar -->
           <div class="card admin-page-card mb-4">
             <div class="card-body">
               <div class="row g-3 align-items-end">
-                <div class="col-lg-8">
-                  <label for="reviewSearchInput" class="form-label small fw-semibold text-muted">Cari review</label>
+                <!-- Search -->
+                <div class="col-lg-4">
+                  <label for="reviewSearchInput" class="form-label small fw-semibold text-muted">Cari Ulasan</label>
                   <div class="input-group">
                     <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
                     <input type="text" id="reviewSearchInput" class="form-control admin-search-box" placeholder="Cari nama atau komentar..." />
                   </div>
                 </div>
-                <div class="col-lg-4">
-                  <button type="button" class="btn btn-outline-secondary rounded-pill w-100" onclick="document.getElementById('reviewSearchInput').value=''; applyReviewFilter();">
-                    <i class="bi bi-x-circle me-1"></i> Bersihkan Cari
+                <!-- Filter Status -->
+                <div class="col-lg-3">
+                  <label class="form-label small fw-semibold text-muted">Status Balasan</label>
+                  <select id="reviewFilterStatus" class="form-select form-select-sm">
+                    <option value="all">Semua Status</option>
+                    <option value="pending">Belum Dibalas</option>
+                    <option value="replied">Sudah Dibalas</option>
+                  </select>
+                </div>
+                <!-- Filter Rating -->
+                <div class="col-lg-2">
+                  <label class="form-label small fw-semibold text-muted">Rating</label>
+                  <select id="reviewFilterRating" class="form-select form-select-sm">
+                    <option value="all">Semua Rating</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 Bintang</option>
+                    <option value="4">⭐⭐⭐⭐ 4 Bintang</option>
+                    <option value="3">⭐⭐⭐ 3 Bintang</option>
+                    <option value="2">⭐⭐ 2 Bintang</option>
+                    <option value="1">⭐ 1 Bintang</option>
+                  </select>
+                </div>
+                <!-- Sorting -->
+                <div class="col-lg-2">
+                  <label class="form-label small fw-semibold text-muted">Urutan</label>
+                  <select id="reviewSort" class="form-select form-select-sm">
+                    <option value="newest">Terbaru</option>
+                    <option value="oldest">Terlama</option>
+                    <option value="rating_asc">Rating Terendah</option>
+                    <option value="rating_desc">Rating Tertinggi</option>
+                  </select>
+                </div>
+                <!-- Reset -->
+                <div class="col-lg-1 d-flex align-items-end">
+                  <button type="button" class="btn btn-outline-secondary rounded-pill w-100" onclick="resetReviewFilter()" title="Reset Filter">
+                    <i class="bi bi-x-circle"></i>
                   </button>
                 </div>
               </div>
@@ -104,16 +202,18 @@
 
           <div id="adminReviewStatus" class="alert alert-light rounded-4 border-0 shadow-sm mb-3">Memuat review...</div>
           <div id="adminReviewList" class="row g-3"></div>
-        </div> <!-- End of Tab 1 -->
+        </div> <!-- End Tab 1 -->
 
-        <!-- TAB 2: Kelola Menu -->
+        <!-- ========== TAB 2: Kelola Katalog Produk ========== -->
         <div class="tab-pane fade" id="menu-pane" role="tabpanel" tabindex="0">
           <div class="row g-4">
-            <!-- Form Tambah Menu -->
+            <!-- Form Tambah / Edit Menu -->
             <div class="col-lg-4">
               <div class="card admin-page-card h-100">
                 <div class="card-body">
-                  <h5 class="fw-bold mb-3" id="menuFormTitle">Tambah Menu Baru</h5>
+                  <h5 class="fw-bold mb-3" id="menuFormTitle">
+                    <i class="bi bi-plus-circle me-2 text-danger"></i>Tambah Menu Baru
+                  </h5>
                   <form id="menuForm">
                     <input type="hidden" id="menuId">
                     <div class="mb-3">
@@ -135,14 +235,18 @@
                       <label class="form-label small fw-semibold text-muted">Deskripsi</label>
                       <textarea id="menuDescription" class="form-control" rows="2" required></textarea>
                     </div>
+                    <!-- v1.1: Upload Gambar dengan Live Preview -->
                     <div class="mb-3">
                       <label class="form-label small fw-semibold text-muted">Upload Gambar Baru</label>
                       <input type="file" id="menuImageFile" class="form-control" accept="image/*">
+                      <!-- v1.1: Live preview container -->
+                      <div id="liveImagePreviewWrapper" class="mt-2 d-none">
+                        <img id="liveImagePreview" src="" alt="Preview Gambar" class="live-image-preview">
+                      </div>
                       <div class="form-text">Atau masukkan URL/Path gambar lama di bawah:</div>
                     </div>
                     <div class="mb-3">
                       <label class="form-label small fw-semibold text-muted">URL / Path Gambar</label>
-                      <!-- FIXED: removed required — validasi dipindah ke JS -->
                       <input type="text" id="menuImageUrl" class="form-control" placeholder="Otomatis terisi jika upload file">
                     </div>
                     <div class="d-flex gap-2">
@@ -153,33 +257,64 @@
                 </div>
               </div>
             </div>
-            
-            <!-- Daftar Menu -->
+
+            <!-- Daftar Katalog Produk -->
             <div class="col-lg-8">
               <div class="card admin-page-card h-100">
                 <div class="card-body">
-                  <h5 class="fw-bold mb-3">Daftar Menu Saat Ini</h5>
-                  <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                      <thead class="table-light">
-                        <tr>
-                          <th>Gambar</th>
-                          <th>Nama & Kategori</th>
-                          <th>Harga</th>
-                          <th class="text-end">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody id="menuTableBody">
-                        <tr><td colspan="4" class="text-center text-muted">Memuat menu...</td></tr>
-                      </tbody>
-                    </table>
+                  <!-- v1.1: Search, Filter Kategori, & Toggle Tampilan -->
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <h5 class="fw-bold mb-0">Daftar Menu Saat Ini</h5>
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                      <input type="text" id="menuSearchInput" class="form-control form-control-sm admin-search-box" placeholder="Cari nama menu..." style="max-width:180px;">
+                      <select id="menuFilterCategory" class="form-select form-select-sm" style="max-width:130px;">
+                        <option value="all">Semua</option>
+                        <option value="satuan">Satuan</option>
+                        <option value="paket">Paket</option>
+                      </select>
+                      <!-- v1.1: Toggle Grid / Tabel -->
+                      <div class="btn-group" role="group" aria-label="Pilih tampilan">
+                        <button type="button" id="viewTableBtn" class="btn btn-sm btn-outline-secondary view-toggle-btn active" onclick="setMenuView('table')" title="Tampilan Tabel">
+                          <i class="bi bi-table"></i>
+                        </button>
+                        <button type="button" id="viewGridBtn" class="btn btn-sm btn-outline-secondary view-toggle-btn" onclick="setMenuView('grid')" title="Tampilan Grid">
+                          <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
+
+                  <!-- Tampilan Tabel (default) -->
+                  <div id="menuTableView">
+                    <div class="table-responsive">
+                      <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Gambar</th>
+                            <th>Nama & Kategori</th>
+                            <th>Harga</th>
+                            <th>Stok</th>
+                            <th class="text-end">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody id="menuTableBody">
+                          <tr><td colspan="5" class="text-center text-muted">Memuat menu...</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- Tampilan Grid Cards (tersembunyi secara default) -->
+                  <div id="menuGridView" class="d-none">
+                    <div class="row g-3" id="menuGridBody"></div>
+                  </div>
+
                 </div>
               </div>
             </div>
           </div>
-        </div> <!-- End of Tab 2 -->
-      </div> <!-- End of Tabs Content -->
+        </div> <!-- End Tab 2 -->
+      </div> <!-- End Tabs Content -->
     </div>
   </div>
 
@@ -196,6 +331,7 @@
     </div>
   </div>
 
+  <!-- Delete Confirm Modal -->
   <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content admin-confirm-modal">
@@ -233,25 +369,29 @@
     let allReviews = [];
     let allMenus = [];
     let editingReplyId = null;
+    let currentMenuView = 'table'; // 'table' | 'grid'
 
     // Simpan referensi unsubscribe untuk realtime listeners
     let unsubReviews = null;
     let unsubMenu = null;
 
-    const status = document.getElementById('adminReviewStatus');
-    const list = document.getElementById('adminReviewList');
+    const statusEl = document.getElementById('adminReviewStatus');
+    const listEl = document.getElementById('adminReviewList');
     const searchInput = document.getElementById('reviewSearchInput');
+    const filterStatusEl = document.getElementById('reviewFilterStatus');
+    const filterRatingEl = document.getElementById('reviewFilterRating');
+    const sortEl = document.getElementById('reviewSort');
 
     // --- TOAST ---
     function tampilkanToast(pesan, tipe = 'success') {
       const toastEl = document.getElementById('adminToast');
       const ikon = document.getElementById('adminToastIcon');
       const pesanEl = document.getElementById('adminToastMessage');
-      
+
       toastEl.className = `toast align-items-center text-bg-${tipe} border-0 rounded-3 shadow`;
       ikon.className = tipe === 'danger' ? 'bi bi-exclamation-triangle-fill fs-5' : 'bi bi-check-circle-fill fs-5';
       pesanEl.textContent = pesan;
-      
+
       const toast = new bootstrap.Toast(toastEl);
       toast.show();
     }
@@ -289,7 +429,6 @@
 
     // --- AUTH ---
     function logoutAdmin() {
-      // Bersihkan realtime listeners sebelum logout
       if (unsubReviews) { unsubReviews(); unsubReviews = null; }
       if (unsubMenu) { unsubMenu(); unsubMenu = null; }
 
@@ -298,11 +437,6 @@
       window.location.href = 'login.html';
     }
 
-    // FIXED: Ganti setInterval polling dengan onIdTokenChanged
-    // onIdTokenChanged dipanggil otomatis oleh Firebase saat:
-    // - User login/logout
-    // - Token di-refresh (setiap ~1 jam)
-    // - Password diubah (token invalidated) → user otomatis null → logout
     let authInitialized = false;
     window.firebaseManager?.onIdTokenChanged?.((user) => {
       if (!authInitialized) {
@@ -312,13 +446,11 @@
           logoutAdmin();
         } else {
           console.log('[Auth] Sesi aktif ditemukan:', user.email);
-          // Mulai realtime listeners setelah auth dikonfirmasi
           startRealtimeListeners();
         }
       } else {
-        // Perubahan state setelah halaman berjalan
         if (!user) {
-          console.warn('[Auth] Sesi berakhir (password berubah / token revoked). Logging out.');
+          console.warn('[Auth] Sesi berakhir. Logging out.');
           logoutAdmin();
         }
       }
@@ -336,55 +468,54 @@
 
     function formatReviewDate(value) {
       if (!value) return 'Belum ada data';
-
       if (typeof value.toDate === 'function') {
-        return value.toDate().toLocaleString('id-ID', {
-          dateStyle: 'medium',
-          timeStyle: 'short'
-        });
+        return value.toDate().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
       }
-
       if (typeof value === 'string') {
-        return new Date(value).toLocaleString('id-ID', {
-          dateStyle: 'medium',
-          timeStyle: 'short'
-        });
+        return new Date(value).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
       }
-
       return 'Belum ada data';
+    }
+
+    // --- v1.1: DASHBOARD STATS ---
+    function updateDashboardStats(reviews, menus) {
+      // Stats Ulasan
+      document.getElementById('statTotalReviews').textContent = reviews.length;
+      document.getElementById('statPendingReviews').textContent = reviews.filter(r => !r.reply).length;
+
+      // Stats Produk (hanya diupdate jika menus sudah tersedia)
+      if (menus !== null) {
+        document.getElementById('statTotalProducts').textContent = menus.length;
+        document.getElementById('statSoldOut').textContent = menus.filter(m => m.isSoldOut).length;
+      }
     }
 
     // --- REVIEW MANAGEMENT ---
     function updateStats(reviews) {
-      const total = reviews.length;
-      const pending = reviews.filter((item) => !item.reply).length;
-      const replied = reviews.filter((item) => item.reply).length;
-
-      document.getElementById('adminTotalReviews').textContent = total;
-      document.getElementById('adminPendingReviews').textContent = pending;
-      document.getElementById('adminRepliedReviews').textContent = replied;
+      updateDashboardStats(reviews, null);
+      // Update stat produk tetap jika allMenus sudah ada
+      if (allMenus.length || allMenus !== undefined) {
+        document.getElementById('statTotalProducts').textContent = allMenus.length;
+        document.getElementById('statSoldOut').textContent = allMenus.filter(m => m.isSoldOut).length;
+      }
     }
 
     function bindReviewActions() {
       document.querySelectorAll('.delete-review-btn').forEach((button) => {
         button.addEventListener('click', () => deleteReview(button.dataset.reviewId));
       });
-
       document.querySelectorAll('.save-reply-btn').forEach((button) => {
         button.addEventListener('click', () => saveReply(button.dataset.reviewId));
       });
-
       document.querySelectorAll('.edit-reply-btn').forEach((button) => {
         button.addEventListener('click', () => {
           editingReplyId = button.dataset.reviewId;
           applyReviewFilter();
         });
       });
-
       document.querySelectorAll('.delete-reply-btn').forEach((button) => {
         button.addEventListener('click', () => deleteReply(button.dataset.reviewId));
       });
-
       document.querySelectorAll('.cancel-reply-edit-btn').forEach((button) => {
         button.addEventListener('click', () => {
           editingReplyId = null;
@@ -393,21 +524,56 @@
       });
     }
 
+    // v1.1: Apply semua filter, sorting, dan pencarian sekaligus
     function applyReviewFilter() {
       const keyword = searchInput?.value?.trim().toLowerCase() || '';
-      const filtered = allReviews.filter((item) => {
+      const status = filterStatusEl?.value || 'all';
+      const rating = filterRatingEl?.value || 'all';
+      const sort = sortEl?.value || 'newest';
+
+      let filtered = allReviews.filter((item) => {
+        // Filter pencarian teks
         const text = `${item.name || ''} ${item.comment || ''} ${item.reply || ''}`.toLowerCase();
-        return text.includes(keyword);
+        const cocokKeyword = text.includes(keyword);
+
+        // Filter status balasan
+        const cocokStatus = status === 'all'
+          || (status === 'pending' && !item.reply)
+          || (status === 'replied' && item.reply);
+
+        // Filter rating
+        const cocokRating = rating === 'all' || String(item.rating || 5) === String(rating);
+
+        return cocokKeyword && cocokStatus && cocokRating;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        const tA = a.createdAt?.toDate?.() || new Date(0);
+        const tB = b.createdAt?.toDate?.() || new Date(0);
+        if (sort === 'newest') return tB - tA;
+        if (sort === 'oldest') return tA - tB;
+        if (sort === 'rating_asc') return (Number(a.rating) || 5) - (Number(b.rating) || 5);
+        if (sort === 'rating_desc') return (Number(b.rating) || 5) - (Number(a.rating) || 5);
+        return tB - tA;
       });
 
       renderReviews(filtered);
     }
 
+    function resetReviewFilter() {
+      if (searchInput) searchInput.value = '';
+      if (filterStatusEl) filterStatusEl.value = 'all';
+      if (filterRatingEl) filterRatingEl.value = 'all';
+      if (sortEl) sortEl.value = 'newest';
+      applyReviewFilter();
+    }
+
     function renderReviews(reviews) {
-      list.innerHTML = '';
+      listEl.innerHTML = '';
 
       if (!reviews || reviews.length === 0) {
-        list.innerHTML = `
+        listEl.innerHTML = `
           <div class="col-12">
             <div class="card admin-empty-state">
               <h5 class="fw-bold mb-2">Belum ada ulasan yang cocok</h5>
@@ -418,7 +584,7 @@
         return;
       }
 
-      list.innerHTML = reviews.map((item) => `
+      listEl.innerHTML = reviews.map((item) => `
         <div class="col-12">
           <div class="card admin-review-card">
             <div class="card-body">
@@ -430,8 +596,8 @@
                       <i class="bi ${item.reply ? 'bi-check2-circle' : 'bi-hourglass-split'}"></i>
                       ${item.reply ? 'Sudah dibalas' : 'Belum dibalas'}
                     </span>
+                    <span class="badge bg-warning text-dark rounded-pill">${'⭐'.repeat(Number(item.rating || 5))} ${item.rating || 5}/5</span>
                   </div>
-                  <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
                   <div class="text-muted small mt-1">${escapeHtml(formatReviewDate(item.createdAt))}</div>
                 </div>
                 <button class="btn btn-sm btn-outline-danger admin-action-btn delete-review-btn" data-review-id="${escapeHtml(item.id || '')}">
@@ -439,7 +605,11 @@
                 </button>
               </div>
 
-              <p class="text-muted mb-3">${escapeHtml(item.comment || '')}</p>
+              <p class="text-muted mb-2">${escapeHtml(item.comment || '')}</p>
+
+              ${item.photoUrl
+                ? `<img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan" class="review-photo-thumb mb-3" style="max-height:140px;width:auto;" loading="lazy">`
+                : ''}
 
               <div class="admin-reply-area">
                 <label class="form-label small fw-semibold text-muted">Balasan admin</label>
@@ -480,78 +650,71 @@
       bindReviewActions();
     }
 
-    // FIXED: Menggunakan realtime listener (onSnapshot) bukan one-time fetch
+    // --- REALTIME LISTENERS ---
     function startRealtimeListeners() {
-      // --- Reviews Realtime ---
+      // Reviews Realtime
       if (unsubReviews) unsubReviews();
-      status.innerHTML = '<span class="text-muted">Memuat review...</span>';
-      
+      statusEl.innerHTML = '<span class="text-muted">Memuat review...</span>';
+
       unsubReviews = window.firebaseManager?.onSnapshotReviews?.((reviews) => {
         allReviews = Array.isArray(reviews) ? reviews : [];
         updateStats(allReviews);
 
         if (!allReviews.length) {
-          status.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
+          statusEl.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
           renderReviews([]);
           return;
         }
 
-        status.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi. <small class="text-muted">(Realtime)</small></span>`;
+        statusEl.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi. <small class="text-muted">(Realtime)</small></span>`;
         applyReviewFilter();
       });
 
-      // Fallback jika onSnapshotReviews tidak tersedia
-      if (!unsubReviews) {
-        loadReviewsFallback();
-      }
+      if (!unsubReviews) loadReviewsFallback();
 
-      // --- Menu Realtime ---
+      // Menu Realtime
       if (unsubMenu) unsubMenu();
-
       unsubMenu = window.firebaseManager?.onSnapshotMenu?.((menus) => {
         allMenus = Array.isArray(menus) ? menus : [];
-        renderMenuTable();
+        // v1.1: Update stat produk setiap kali menu berubah
+        document.getElementById('statTotalProducts').textContent = allMenus.length;
+        document.getElementById('statSoldOut').textContent = allMenus.filter(m => m.isSoldOut).length;
+        renderMenuCatalog();
       });
 
-      // Fallback jika onSnapshotMenu tidak tersedia
-      if (!unsubMenu) {
-        initMenuFallback();
-      }
+      if (!unsubMenu) initMenuFallback();
     }
 
-    // Fallback untuk browser/kondisi di mana realtime listener gagal
     async function loadReviewsFallback() {
       try {
         const reviews = await window.firebaseManager?.loadReviews?.();
         allReviews = Array.isArray(reviews) ? reviews : [];
         updateStats(allReviews);
         if (!allReviews.length) {
-          status.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
+          statusEl.innerHTML = '<span class="text-muted">Belum ada review yang masuk.</span>';
           renderReviews([]);
         } else {
-          status.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi.</span>`;
+          statusEl.innerHTML = `<span class="text-success">${allReviews.length} review terdeteksi.</span>`;
           applyReviewFilter();
         }
       } catch (error) {
         console.error('[Admin] Gagal memuat review:', error);
-        status.innerHTML = '<span class="text-danger">Gagal memuat review.</span>';
+        statusEl.innerHTML = '<span class="text-danger">Gagal memuat review.</span>';
       }
     }
 
     async function initMenuFallback() {
       try {
         allMenus = await window.firebaseManager?.loadMenu?.() || [];
-        renderMenuTable();
+        renderMenuCatalog();
       } catch (error) {
         console.error('[Admin] Gagal memuat menu:', error);
       }
     }
 
+    // --- REVIEW CRUD ---
     async function deleteReview(id) {
-      if (!id) {
-        tampilkanToast('ID review tidak ditemukan.', 'danger');
-        return;
-      }
+      if (!id) { tampilkanToast('ID review tidak ditemukan.', 'danger'); return; }
 
       const confirmed = await mintaKonfirmasiHapus('Hapus review ini?', 'Review dan balasan yang terkait akan dihapus permanen.');
       if (!confirmed) return;
@@ -560,7 +723,6 @@
         const result = await window.firebaseManager?.deleteReview?.(id);
         if (result?.ok) {
           tampilkanToast('Review berhasil dihapus.');
-          // Data akan otomatis diupdate oleh onSnapshot listener
         } else {
           tampilkanToast(result?.error || 'Gagal menghapus review.', 'danger');
         }
@@ -575,17 +737,13 @@
       const reply = textarea?.value?.trim() || '';
       const button = document.querySelector(`.save-reply-btn[data-review-id="${id}"]`);
 
-      if (button) {
-        button.disabled = true;
-        button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Menyimpan...';
-      }
+      if (button) { button.disabled = true; button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Menyimpan...'; }
 
       try {
         const result = await window.firebaseManager?.updateReviewReply?.(id, reply);
         if (result?.ok) {
           editingReplyId = null;
           tampilkanToast('Balasan berhasil disimpan.');
-          // Data akan otomatis diupdate oleh onSnapshot listener
         } else {
           tampilkanToast(result?.error || 'Gagal menyimpan balasan.', 'danger');
         }
@@ -593,18 +751,12 @@
         console.error('[Admin] Gagal menyimpan balasan:', error);
         tampilkanToast('Terjadi kesalahan saat menyimpan balasan.', 'danger');
       } finally {
-        if (button) {
-          button.disabled = false;
-          button.innerHTML = '<i class="bi bi-send-fill me-1"></i> Simpan Balasan';
-        }
+        if (button) { button.disabled = false; button.innerHTML = '<i class="bi bi-send-fill me-1"></i> Simpan Balasan'; }
       }
     }
 
     async function deleteReply(id) {
-      if (!id) {
-        tampilkanToast('ID review tidak ditemukan.', 'danger');
-        return;
-      }
+      if (!id) { tampilkanToast('ID review tidak ditemukan.', 'danger'); return; }
 
       const confirmed = await mintaKonfirmasiHapus('Hapus balasan ini?', 'Balasan admin akan dihapus permanen dari review ini.');
       if (!confirmed) return;
@@ -614,7 +766,6 @@
         if (result?.ok) {
           editingReplyId = null;
           tampilkanToast('Balasan berhasil dihapus.');
-          // Data akan otomatis diupdate oleh onSnapshot listener
         } else {
           tampilkanToast(result?.error || 'Gagal menghapus balasan.', 'danger');
         }
@@ -624,24 +775,68 @@
       }
     }
 
-    // --- MENU MANAGEMENT ---
-    function renderMenuTable() {
+    // --- v1.1: MENU CATALOG (Table + Grid) ---
+    function getFilteredMenus() {
+      const keyword = (document.getElementById('menuSearchInput')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('menuFilterCategory')?.value || 'all';
+
+      return allMenus.filter(m => {
+        const cocokKeyword = (m.name || '').toLowerCase().includes(keyword);
+        const cocokKat = cat === 'all' || m.category === cat;
+        return cocokKeyword && cocokKat;
+      });
+    }
+
+    function renderMenuCatalog() {
+      const filtered = getFilteredMenus();
+      if (currentMenuView === 'table') {
+        renderMenuTable(filtered);
+      } else {
+        renderMenuGrid(filtered);
+      }
+    }
+
+    function setMenuView(view) {
+      currentMenuView = view;
+      document.getElementById('menuTableView').classList.toggle('d-none', view !== 'table');
+      document.getElementById('menuGridView').classList.toggle('d-none', view !== 'grid');
+      document.getElementById('viewTableBtn').classList.toggle('active', view === 'table');
+      document.getElementById('viewGridBtn').classList.toggle('active', view === 'grid');
+      renderMenuCatalog();
+    }
+
+    function renderMenuTable(menus) {
       const tbody = document.getElementById('menuTableBody');
-      if (!allMenus.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada data menu.</td></tr>';
+      if (!menus || !menus.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada data menu.</td></tr>';
         return;
       }
 
-      tbody.innerHTML = allMenus.map(m => `
+      tbody.innerHTML = menus.map(m => `
         <tr>
           <td>
-            <img src="${escapeHtml(m.image || '')}" alt="${escapeHtml(m.name)}" class="rounded-3 shadow-sm" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+            <img src="${escapeHtml(m.image || '')}" alt="${escapeHtml(m.name)}" class="rounded-3 shadow-sm" style="width:50px;height:50px;object-fit:cover;" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
           </td>
           <td>
             <div class="fw-bold">${escapeHtml(m.name)}</div>
             <span class="badge bg-secondary">${escapeHtml(m.category)}</span>
           </td>
           <td class="fw-semibold text-danger-custom">Rp ${Number(m.price).toLocaleString('id-ID')}</td>
+          <td>
+            <!-- v1.1: Toggle stok realtime -->
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch"
+                id="stock-${escapeHtml(String(m.id))}"
+                ${m.isSoldOut ? '' : 'checked'}
+                onchange="toggleStock('${escapeHtml(String(m.id))}', this.checked)"
+                title="${m.isSoldOut ? 'Stok Habis' : 'Tersedia'}">
+              <label class="form-check-label stock-toggle-label" for="stock-${escapeHtml(String(m.id))}">
+                ${m.isSoldOut
+                  ? '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Habis</span>'
+                  : '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Tersedia</span>'}
+              </label>
+            </div>
+          </td>
           <td class="text-end">
             <button class="btn btn-sm btn-outline-secondary rounded-pill me-1" onclick="editMenu('${escapeHtml(String(m.id))}')"><i class="bi bi-pencil"></i></button>
             <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteMenuAction('${escapeHtml(String(m.id))}')"><i class="bi bi-trash"></i></button>
@@ -650,15 +845,71 @@
       `).join('');
     }
 
-    // FIXED: Validasi gambar dipindah ke JS — required dihapus dari HTML
+    function renderMenuGrid(menus) {
+      const container = document.getElementById('menuGridBody');
+      if (!menus || !menus.length) {
+        container.innerHTML = '<div class="col-12 text-center text-muted">Belum ada data menu.</div>';
+        return;
+      }
+
+      container.innerHTML = menus.map(m => `
+        <div class="col-sm-6 col-xl-4">
+          <div class="card admin-grid-card h-100">
+            <img src="${escapeHtml(m.image || '')}" alt="${escapeHtml(m.name)}" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <div class="fw-bold">${escapeHtml(m.name)}</div>
+                <span class="badge bg-secondary">${escapeHtml(m.category)}</span>
+              </div>
+              <div class="text-danger-custom fw-semibold small mb-2">Rp ${Number(m.price).toLocaleString('id-ID')}</div>
+              <!-- v1.1: Toggle stok grid view -->
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch"
+                  id="gstock-${escapeHtml(String(m.id))}"
+                  ${m.isSoldOut ? '' : 'checked'}
+                  onchange="toggleStock('${escapeHtml(String(m.id))}', this.checked)">
+                <label class="form-check-label stock-toggle-label" for="gstock-${escapeHtml(String(m.id))}">
+                  ${m.isSoldOut
+                    ? '<span class="text-danger">Stok Habis</span>'
+                    : '<span class="text-success">Tersedia</span>'}
+                </label>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill flex-fill" onclick="editMenu('${escapeHtml(String(m.id))}')"><i class="bi bi-pencil"></i> Edit</button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill flex-fill" onclick="deleteMenuAction('${escapeHtml(String(m.id))}')"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // v1.1: Toggle stok produk (In Stock / Sold Out) secara realtime
+    async function toggleStock(id, isChecked) {
+      // isChecked = true berarti "Tersedia" (isSoldOut = false)
+      const isSoldOut = !isChecked;
+      try {
+        const result = await window.firebaseManager?.updateProductStock?.(id, isSoldOut);
+        if (result?.ok) {
+          tampilkanToast(`Status stok berhasil diubah ke: ${isSoldOut ? 'Stok Habis' : 'Tersedia'}.`);
+          // onSnapshot akan otomatis refresh data
+        } else {
+          tampilkanToast(result?.error || 'Gagal memperbarui stok.', 'danger');
+        }
+      } catch (error) {
+        console.error('[Admin] Gagal toggle stok:', error);
+        tampilkanToast('Terjadi kesalahan saat mengubah status stok.', 'danger');
+      }
+    }
+
+    // FIXED: Validasi gambar dipindah ke JS
     document.getElementById('menuForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const btn = document.getElementById('saveMenuBtn');
       const fileInput = document.getElementById('menuImageFile');
       let imageUrl = document.getElementById('menuImageUrl').value.trim();
 
-      // Validasi: harus ada file ATAU URL
       if (fileInput.files.length === 0 && !imageUrl) {
         tampilkanToast('Pilih file gambar atau masukkan URL gambar.', 'danger');
         return;
@@ -668,7 +919,6 @@
       btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menyimpan...';
 
       try {
-        // Upload jika ada file baru dipilih
         if (fileInput.files.length > 0) {
           const file = fileInput.files[0];
           const uploadRes = await window.firebaseManager?.uploadImage(file);
@@ -677,7 +927,7 @@
             tampilkanToast('Gambar berhasil diunggah.');
           } else {
             tampilkanToast(uploadRes?.error || 'Gagal mengunggah gambar', 'danger');
-            return; // Hentikan proses jika upload gagal
+            return;
           }
         }
 
@@ -695,7 +945,6 @@
         if (result?.ok) {
           tampilkanToast('Menu berhasil disimpan!');
           resetMenuForm();
-          // Data akan otomatis diupdate oleh onSnapshot listener
         } else {
           tampilkanToast(result?.error || 'Gagal menyimpan menu.', 'danger');
         }
@@ -703,26 +952,51 @@
         console.error('[Admin] Gagal menyimpan menu:', error);
         tampilkanToast('Terjadi kesalahan saat menyimpan menu.', 'danger');
       } finally {
-        // FIXED: Tombol SELALU dikembalikan ke kondisi aktif
         btn.disabled = false;
         btn.innerHTML = 'Simpan Menu';
+      }
+    });
+
+    // v1.1: Live Image Preview saat file dipilih
+    document.getElementById('menuImageFile')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const wrapper = document.getElementById('liveImagePreviewWrapper');
+      const preview = document.getElementById('liveImagePreview');
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          preview.src = ev.target.result;
+          wrapper.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        wrapper.classList.add('d-none');
+        preview.src = '';
       }
     });
 
     function editMenu(id) {
       const m = allMenus.find(x => String(x.id) === String(id));
       if (!m) return;
-      
+
       document.getElementById('menuId').value = m.id;
       document.getElementById('menuName').value = m.name;
       document.getElementById('menuPrice').value = m.price;
       document.getElementById('menuCategory').value = m.category;
       document.getElementById('menuDescription').value = m.description || '';
       document.getElementById('menuImageUrl').value = m.image || '';
-      document.getElementById('menuFormTitle').textContent = 'Edit Menu';
+      document.getElementById('menuFormTitle').innerHTML = '<i class="bi bi-pencil me-2 text-danger"></i>Edit Menu';
       document.getElementById('cancelEditMenuBtn').classList.remove('d-none');
-      
-      // Beralih ke tab menu jika sedang tidak di sana
+
+      // v1.1: Tampilkan live preview dari URL yang sudah ada
+      if (m.image) {
+        const wrapper = document.getElementById('liveImagePreviewWrapper');
+        const preview = document.getElementById('liveImagePreview');
+        preview.src = m.image;
+        wrapper.classList.remove('d-none');
+      }
+
       const tab = new bootstrap.Tab(document.getElementById('menu-tab'));
       tab.show();
     }
@@ -730,11 +1004,12 @@
     function resetMenuForm() {
       document.getElementById('menuForm').reset();
       document.getElementById('menuId').value = '';
-      document.getElementById('menuFormTitle').textContent = 'Tambah Menu Baru';
+      document.getElementById('menuFormTitle').innerHTML = '<i class="bi bi-plus-circle me-2 text-danger"></i>Tambah Menu Baru';
       document.getElementById('cancelEditMenuBtn').classList.add('d-none');
+      document.getElementById('liveImagePreviewWrapper').classList.add('d-none');
+      document.getElementById('liveImagePreview').src = '';
     }
 
-    // Renamed dari deleteMenu agar tidak konflik dengan firebaseManager.deleteMenu
     async function deleteMenuAction(id) {
       const menu = allMenus.find((item) => String(item.id) === String(id));
       const namaMenu = menu?.name ? `"${menu.name}"` : 'ini';
@@ -745,7 +1020,6 @@
         const result = await window.firebaseManager?.deleteMenu?.(id);
         if (result?.ok) {
           tampilkanToast('Menu berhasil dihapus.');
-          // Data akan otomatis diupdate oleh onSnapshot listener
         } else {
           tampilkanToast(result?.error || 'Gagal menghapus menu.', 'danger');
         }
@@ -755,7 +1029,15 @@
       }
     }
 
+    // Event Listeners untuk filter ulasan
     searchInput?.addEventListener('input', applyReviewFilter);
+    filterStatusEl?.addEventListener('change', applyReviewFilter);
+    filterRatingEl?.addEventListener('change', applyReviewFilter);
+    sortEl?.addEventListener('change', applyReviewFilter);
+
+    // Event Listeners untuk filter produk
+    document.getElementById('menuSearchInput')?.addEventListener('input', renderMenuCatalog);
+    document.getElementById('menuFilterCategory')?.addEventListener('change', renderMenuCatalog);
   </script>
 </body>
 </html>

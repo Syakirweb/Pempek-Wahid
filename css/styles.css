@@ -71,10 +71,26 @@ html {
 }
 
 .brand-logo {
-  width: 90px;
+  width: 64px;
   height: auto;
   object-fit: contain;
   margin-right: 0.75rem;
+}
+
+.admin-brand-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(98, 43, 20, 0.12);
+}
+
+.auth-brand-logo {
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  align-self: center;
+  border-radius: 24px;
 }
 
 .text-danger-custom {
@@ -365,3 +381,79 @@ html {
   background: #4d1f10;
   border-color: #4d1f10;
 }
+
+/* --- v1.1 UPGRADE STYLES --- */
+/* Delivery Options radio cards */
+.delivery-option-card {
+  border: 1.5px solid rgba(98, 43, 20, 0.15);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.delivery-option-card:hover {
+  border-color: var(--brand-primary);
+  background: rgba(250, 171, 112, 0.08);
+}
+
+.delivery-option-card input[type="radio"]:checked + label {
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.delivery-option-cardHasChecked {
+  border-color: var(--brand-primary) !important;
+  background: rgba(250, 171, 112, 0.12) !important;
+}
+
+/* Sold out badge & image overlay */
+.product-card.sold-out .product-image {
+  filter: grayscale(85%);
+  opacity: 0.65;
+}
+
+.badge-sold-out {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #dc3545;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+  z-index: 2;
+}
+
+/* Live Image Preview */
+.live-image-preview {
+  max-height: 160px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 0.8rem;
+  border: 1px dashed rgba(98, 43, 20, 0.2);
+}
+
+/* Review Photo Thumbnails */
+.review-photo-thumb {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.review-photo-thumb:hover {
+  transform: scale(1.02);
+}
+
+/* Stock status toggle switch */
+.form-check-input:checked {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+

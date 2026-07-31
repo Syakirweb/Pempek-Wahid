@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Semua Ulasan & Testimoni Pelanggan Pempek Wahid Palembang - Rasa Ikan Kakap Asli Rp 1.000">
+    <title>Ulasan Pelanggan - Pempek Wahid</title>
+    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q04TMMKB68"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-Q04TMMKB68');
+    </script>
+    <style>
+        .star-rating-box {
+            display: flex;
+            gap: 8px;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        .star-icon {
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .star-icon:hover {
+            transform: scale(1.2);
+        }
+        .review-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(98, 43, 20, 0.1) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm custom-navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+                <img src="images/logo.svg" alt="Logo Pempek Wahid" class="brand-logo">
+                <div>
+                    <span class="fw-bold fs-4 brand-title">Pempek <span class="text-danger-custom">Wahid</span></span>
+                    <span class="d-block badge bg-warning text-dark text-uppercase font-xs">Murah • Lemak • Besak</span>
+                </div>
+            </a>
+            
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <a href="index.html" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-semibold">
+                    <i class="bi bi-house-door-fill me-1"></i> Kembali ke Beranda
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header / Hero -->
+    <section class="py-4 bg-light-custom border-bottom">
+        <div class="container">
+            <div class="row align-items-center gy-3">
+                <div class="col-lg-8">
+                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-semibold mb-2">
+                        <i class="bi bi-star-fill me-1 text-dark"></i> Komunitas & Ulasan
+                    </span>
+                    <h1 class="fw-bold text-dark mb-2">Suara Penikmat Pempek Wahid</h1>
+                    <p class="text-muted lead fs-6 mb-0">
+                        Lihat ribuan kesan langsung dari pembeli kami dan bagikan pengalaman Anda menikmati Pempek Ikan Kakap Rp 1.000 dengan cuko kental khas Palembang.
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                        <div class="row text-center g-2">
+                            <div class="col-4 border-end">
+                                <h3 class="fw-bold text-danger-custom mb-0" id="statTotalReviews">0</h3>
+                                <span class="text-muted font-xs">Total Review</span>
+                            </div>
+                            <div class="col-4 border-end">
+                                <h3 class="fw-bold text-warning-emphasis mb-0" id="statAvgRating">5.0</h3>
+                                <div class="font-xs text-warning" id="statAvgStars">⭐⭐⭐⭐⭐</div>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="fw-bold text-success mb-0" id="statRepliedCount">0</h3>
+                                <span class="text-muted font-xs">Dibalas Admin</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content: Form & Reviews Stream -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                
+                <!-- Form Input Ulasan (Left Column) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 90px; z-index: 10;">
+                        <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3">
+                            <div class="icon-circle bg-danger-subtle text-danger rounded-circle p-2 d-inline-flex">
+                                <i class="bi bi-pencil-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-0">Tulis Ulasan Anda</h5>
+                                <span class="text-muted small">Bagikan pendapat sejujurnya!</span>
+                            </div>
+                        </div>
+
+                        <!-- Form Input Ulasan (#form-ulasan & #addReviewForm) -->
+                        <form id="form-ulasan">
+                            <!-- v1.1: Anti-spam honeypot -->
+                            <input type="text" name="website_url" id="hp_website_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none !important;position:absolute;left:-9999px;">
+
+                            <div class="mb-3">
+                                <label for="reviewerName" class="form-label small fw-semibold">Nama Lengkap / Panggilan</label>
+                                <input type="text" id="reviewerName" class="form-control rounded-3" placeholder="Contoh: Kak Wahyu" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Beri Rating Bintang</label>
+                                <div class="star-rating-box mb-1" id="starRatingPicker">
+                                    <i class="bi bi-star-fill text-warning star-icon" data-value="1"></i>
+                                    <i class="bi bi-star-fill text-warning star-icon" data-value="2"></i>
+                                    <i class="bi bi-star-fill text-warning star-icon" data-value="3"></i>
+                                    <i class="bi bi-star-fill text-warning star-icon" data-value="4"></i>
+                                    <i class="bi bi-star-fill text-warning star-icon" data-value="5"></i>
+                                </div>
+                                <input type="hidden" id="reviewerRating" value="5">
+                                <small class="text-muted d-block fw-semibold" id="ratingTextLabel">⭐⭐⭐⭐⭐ (5/5) Sempurna & Lezat!</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="reviewerComment" class="form-label small fw-semibold">Komentar / Pengalaman Rasa</label>
+                                <textarea id="reviewerComment" class="form-control rounded-3" rows="3" placeholder="Ceritakan kelezatan pempek kakap, cuko kental, atau layanan pengiriman kami..." required></textarea>
+                            </div>
+
+                            <!-- v1.1: Upload foto ulasan -->
+                            <div class="mb-4">
+                                <label for="reviewPhotoFile" class="form-label small fw-semibold">Foto Ulasan <span class="text-muted fw-normal">(opsional)</span></label>
+                                <input type="file" id="reviewPhotoFile" class="form-control form-control-sm rounded-3" accept="image/*">
+                            </div>
+
+                            <button type="submit" class="btn btn-danger-custom w-100 rounded-pill py-2.5 fw-bold shadow">
+                                <i class="bi bi-send-fill me-2"></i>Kirim Ulasan Sekarang
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Reviews Feed Stream (Right Column) -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <div class="search-box position-relative">
+                                    <input type="text" id="searchReviewInput" class="form-control form-control-sm rounded-pill ps-3" placeholder="Cari ulasan...">
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <select id="filterRatingSelect" class="form-select form-select-sm rounded-pill">
+                                    <option value="all">Semua Rating</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ 5 Bintang</option>
+                                    <option value="4">⭐⭐⭐⭐ 4 Bintang</option>
+                                    <option value="3">⭐⭐⭐ 3 Bintang</option>
+                                    <option value="2">⭐⭐ 2 Bintang</option>
+                                    <option value="1">⭐ 1 Bintang</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <select id="filterReplySelect" class="form-select form-select-sm rounded-pill">
+                                    <option value="all">Semua Status</option>
+                                    <option value="replied">Sudah Dibalas</option>
+                                    <option value="unreplied">Belum Dibalas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="sortReviewSelect" class="form-select form-select-sm rounded-pill">
+                                    <option value="newest">Terbaru</option>
+                                    <option value="oldest">Terlama</option>
+                                    <option value="rating_high">Rating Tertinggi</option>
+                                    <option value="rating_low">Rating Terendah</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Container Ulasan Realtime -->
+                    <div class="row g-3" id="allReviewsContainer">
+                        <!-- Ulasan akan dimuat otomatis via Firestore onSnapshot -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-bg text-white py-4 border-top border-secondary mt-5">
+        <div class="container text-center">
+            <p class="mb-1 fw-bold text-amber">Pempek Wahid - Olahan Ikan Kakap Asli Rp 1.000</p>
+            <p class="text-muted small mb-0">&copy; 2026 Pempek Wahid. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        <div id="reviewToast" class="toast align-items-center text-bg-success border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <i id="toastIcon" class="bi bi-check-circle-fill fs-5"></i>
+                    <span id="toastMsg">Ulasan berhasil terkirim!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+    <!-- Firebase Config -->
+    <script src="js/firebase.js"></script>
+    <!-- Reviews Page Application Logic -->
+    <script src="js/reviews-page.js"></script>
+</body>
+</html>

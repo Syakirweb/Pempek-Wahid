@@ -41,45 +41,56 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-async function muatUlasan() {
+function renderUlasanHtml(ulasan, container) {
+  if (!ulasan || ulasan.length === 0) {
+    container.innerHTML = '<div class="col-12"><div class="alert alert-light rounded-4 border text-muted">Belum ada ulasan. Jadilah yang pertama menulis review untuk Pempek Wahid.</div></div>';
+    return;
+  }
+
+  container.innerHTML = ulasan.map((item) => `
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <h6 class="fw-bold mb-1">${escapeHtml(item.name || 'Pelanggan')}</h6>
+              <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
+            </div>
+            <span class="badge bg-danger-subtle text-danger rounded-pill">${item.rating || 5}/5</span>
+          </div>
+          <p class="text-muted small mb-2">${escapeHtml(item.comment || '')}</p>
+          ${item.photoUrl
+            ? `<img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan" class="review-photo-thumb mb-2" loading="lazy">`
+            : ''}
+          ${item.reply
+            ? `<div class="border rounded-3 p-3 bg-light">
+                <div class="fw-semibold small text-danger mb-1"><i class="bi bi-reply-fill me-1"></i>Balasan Pempek Wahid</div>
+                <p class="mb-0 small text-muted">${escapeHtml(item.reply)}</p>
+              </div>`
+            : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function muatUlasan() {
   const container = document.getElementById('reviewsContainer');
   if (!container) return;
 
-  container.innerHTML = '<div class="col-12 text-center text-muted small">Memuat ulasan terbaru...</div>';
+  container.innerHTML = '<div class="col-12 text-center text-muted small py-3"><div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>Memuat ulasan terbaru...</div>';
 
-  try {
-    const ulasan = await window.firebaseManager?.loadReviews?.();
-
-    if (!ulasan || ulasan.length === 0) {
-      container.innerHTML = '<div class="col-12"><div class="alert alert-light rounded-4 border">Belum ada ulasan. Jadilah yang pertama menulis review untuk Pempek Wahid.</div></div>';
-      return;   
-    }
-
-    container.innerHTML = ulasan.map((item) => `
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-              <div>
-                <h6 class="fw-bold mb-1">${escapeHtml(item.name || 'Pelanggan')}</h6>
-                <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
-              </div>
-              <span class="badge bg-danger-subtle text-danger rounded-pill">${item.rating || 5}/5</span>
-            </div>
-            <p class="text-muted small mb-3">${escapeHtml(item.comment || '')}</p>
-            ${item.reply
-              ? `<div class="border rounded-3 p-3 bg-light">
-                  <div class="fw-semibold small text-danger mb-1">Balasan Pempek Wahid</div>
-                  <p class="mb-0 small text-muted">${escapeHtml(item.reply)}</p>
-                </div>`
-              : ''}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch (error) {
-    console.error('[App] Gagal memuat ulasan:', error);
-    container.innerHTML = '<div class="col-12"><div class="alert alert-warning rounded-4 border">Gagal memuat ulasan. Coba refresh halaman.</div></div>';
+  if (window.firebaseManager?.onSnapshotReviews) {
+    window.firebaseManager.onSnapshotReviews((ulasan) => {
+      renderUlasanHtml(ulasan, container);
+    }, 4);
+  } else {
+    window.firebaseManager?.loadReviews?.(4).then((ulasan) => {
+      renderUlasanHtml(ulasan, container);
+    }).catch((error) => {
+      console.error('[App] Gagal memuat ulasan:', error);
+      container.innerHTML = '<div class="col-12"><div class="alert alert-warning rounded-4 border">Gagal memuat ulasan. Coba refresh halaman.</div></div>';
+    });
   }
 }
 
@@ -89,6 +100,13 @@ async function kirimUlasan(event) {
   const now = Date.now();
   if (reviewSubmitCooldown && now - lastReviewSubmitTime < REVIEW_COOLDOWN_MS) {
     tampilkanToast('Tunggu sebentar sebelum mengirim ulasan lagi.', 'danger');
+    return;
+  }
+
+  // v1.1: Anti-spam honeypot check — batalkan jika field tersembunyi terisi
+  const honeypot = document.getElementById('hp_website_url');
+  if (honeypot && honeypot.value.trim() !== '') {
+    console.warn('[Review] Spam terdeteksi melalui honeypot. Pengiriman dibatalkan.');
     return;
   }
 
@@ -109,11 +127,24 @@ async function kirimUlasan(event) {
   }
 
   try {
-    const hasil = await window.firebaseManager?.saveReview?.({
+    // v1.1: Cek apakah ada foto yang diupload
+    let photoUrl = null;
+    const fileInput = document.getElementById('reviewPhotoFile');
+    if (fileInput && fileInput.files.length > 0) {
+      const uploadRes = await window.firebaseManager?.uploadReviewPhoto?.(fileInput.files[0]);
+      if (uploadRes?.ok) {
+        photoUrl = uploadRes.url;
+      }
+    }
+
+    const reviewPayload = {
       name: nama,
       rating: Number(rating || 5),
       comment: komentar
-    });
+    };
+    if (photoUrl) reviewPayload.photoUrl = photoUrl;
+
+    const hasil = await window.firebaseManager?.saveReview?.(reviewPayload);
 
     if (hasil?.ok) {
       form.reset();
@@ -162,9 +193,15 @@ function tampilkanProduk(itemProduk) {
     const kolom = document.createElement('div');
     kolom.className = 'col-sm-6 col-lg-4';
 
+    // v1.1: Tampilkan badge "Stok Habis" jika produk tidak tersedia
+    const isSoldOut = Boolean(produk.isSoldOut);
+
     kolom.innerHTML = `
-      <div class="card border-0 shadow-sm rounded-4 h-100 product-card">
-        <img src="${escapeHtml(produk.image || '')}" class="card-img-top rounded-top-4 product-image" alt="${escapeHtml(produk.name)}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+      <div class="card border-0 shadow-sm rounded-4 h-100 product-card${isSoldOut ? ' sold-out' : ''}">
+        <div class="position-relative">
+          <img src="${escapeHtml(produk.image || '')}" class="card-img-top rounded-top-4 product-image" alt="${escapeHtml(produk.name)}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+          ${isSoldOut ? '<span class="badge-sold-out"><i class="bi bi-x-circle-fill me-1"></i>Stok Habis</span>' : ''}
+        </div>
         <div class="card-body d-flex flex-column">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <h5 class="fw-bold mb-0">${escapeHtml(produk.name)}</h5>
@@ -173,7 +210,9 @@ function tampilkanProduk(itemProduk) {
           <p class="text-muted small mb-3">${escapeHtml(produk.description || '')}</p>
           <div class="mt-auto d-flex gap-2">
             <button class="btn btn-outline-dark rounded-pill px-3 btn-sm detail-btn" data-id="${escapeHtml(String(produk.id))}">Lihat Detail</button>
-            <button class="btn btn-danger-custom rounded-pill px-3 btn-sm add-cart-btn" data-id="${escapeHtml(String(produk.id))}">Tambah</button>
+            <button class="btn btn-danger-custom rounded-pill px-3 btn-sm add-cart-btn" data-id="${escapeHtml(String(produk.id))}"${isSoldOut ? ' disabled title="Stok habis"' : ''}>
+              ${isSoldOut ? '<i class="bi bi-x-circle me-1"></i>Stok Habis' : 'Tambah'}
+            </button>
           </div>
         </div>
       </div>
@@ -211,6 +250,15 @@ function pasangAksiProduk() {
       gambarModal.onerror = function () { this.onerror = null; this.src = FALLBACK_IMAGE; };
       tombolTambahModal.dataset.id = String(produk.id);
 
+      // v1.1: Nonaktifkan tombol tambah modal jika stok habis
+      if (produk.isSoldOut) {
+        tombolTambahModal.disabled = true;
+        tombolTambahModal.innerHTML = '<i class="bi bi-x-circle me-1"></i> Stok Habis';
+      } else {
+        tombolTambahModal.disabled = false;
+        tombolTambahModal.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Tambah Ke Keranjang';
+      }
+
       const modal = new bootstrap.Modal(document.getElementById('productModal'));
       modal.show();
     });
@@ -233,6 +281,12 @@ function bukaDrawerKeranjang() {
 function tambahKeKeranjang(idProduk) {
   const produk = products.find((item) => String(item.id) === String(idProduk));
   if (!produk) return;
+
+  // v1.1: Tolak produk dengan status stok habis
+  if (produk.isSoldOut) {
+    tampilkanToast(`${produk.name} sedang tidak tersedia (stok habis).`, 'danger');
+    return;
+  }
 
   if (produk.name.toLowerCase().includes('kulit gepeng')) {
     tampilkanToast('Pempek kulit gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lengket dan cepat basi.', 'danger');
@@ -381,6 +435,27 @@ tombolFilter.forEach((button) => {
   });
 });
 
+// v1.1: Highlight delivery option card yang aktif saat radio dipilih
+document.addEventListener('change', (e) => {
+  if (e.target.name === 'deliveryMethod') {
+    document.querySelectorAll('.delivery-option-card').forEach((card) => {
+      card.classList.remove('delivery-option-cardHasChecked');
+    });
+    const checkedInput = document.querySelector('input[name="deliveryMethod"]:checked');
+    if (checkedInput) {
+      checkedInput.closest('.delivery-option-card')?.classList.add('delivery-option-cardHasChecked');
+    }
+  }
+});
+
+// Saat pertama kali halaman dimuat, highlight kartu yang sudah terpilih
+document.addEventListener('DOMContentLoaded', () => {
+  const checkedInput = document.querySelector('input[name="deliveryMethod"]:checked');
+  if (checkedInput) {
+    checkedInput.closest('.delivery-option-card')?.classList.add('delivery-option-cardHasChecked');
+  }
+});
+
 // Saat tombol tambah dari modal ditekan, ambil id produk lalu masukkan ke keranjang.
 document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
   const idProduk = String(document.getElementById('modalAddToCartBtn').dataset.id);
@@ -391,6 +466,36 @@ document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
 // Saat form review dikirim, simpan ke Firestore.
 document.getElementById('addReviewForm')?.addEventListener('submit', kirimUlasan);
 
+// v1.1: Tombol bagikan website (Social Share Button)
+document.getElementById('shareWebsiteBtn')?.addEventListener('click', async () => {
+  const shareData = {
+    title: 'Pempek Wahid - Ikan Kakap Asli Rp 1.000',
+    text: 'Coba Pempek Wahid! Pempek ikan kakap asli Palembang yang murah, lemak, dan besak. Cuko kental khas Palembang!',
+    url: window.location.href
+  };
+
+  try {
+    // Coba gunakan Web Share API jika didukung browser
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      // Fallback: Salin tautan ke clipboard
+      await navigator.clipboard.writeText(window.location.href);
+      tampilkanToast('Tautan berhasil disalin ke clipboard!', 'success');
+    }
+  } catch (error) {
+    // Jika Web Share dibatalkan user, abaikan. Jika error lain, coba clipboard
+    if (error.name !== 'AbortError') {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        tampilkanToast('Tautan berhasil disalin ke clipboard!', 'success');
+      } catch {
+        tampilkanToast('Gagal menyalin tautan. Salin manual dari address bar.', 'danger');
+      }
+    }
+  }
+});
+
 // Saat tombol checkout di klik, cek syarat minimum order lalu kirim pesanan ke WhatsApp.
 tombolCheckoutWhatsApp?.addEventListener('click', () => {
   if (keranjang.length === 0) {
@@ -399,6 +504,7 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
     return;
   }
 
+  // v1.1: Hard-check di sisi JavaScript (tidak dapat di-bypass dari console)
   const totalQty = keranjang.reduce((sum, item) => sum + item.qty, 0);
   if (totalQty < PEMESANAN_MINIMAL) {
     tampilkanToast(`Minimum pemesanan adalah ${PEMESANAN_MINIMAL} pcs. Saat ini anda baru memilih ${totalQty} pcs.`, 'danger');
@@ -406,12 +512,19 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
     return;
   }
 
+  // v1.1: Ambil metode pengiriman yang dipilih
+  const metodePengiriman = document.querySelector('input[name="deliveryMethod"]:checked')?.value || 'ambil_sendiri';
+  const labelMetode = metodePengiriman === 'ambil_sendiri'
+    ? '🏪 Ambil Sendiri ke Outlet'
+    : '🚗 Kirim via Kurir/Ojol (Ongkir Ditanggung Pembeli)';
+
   const daftarPesanan = keranjang.map((item) => `- ${item.name} x${item.qty}`).join('\n');
   const total = keranjang.reduce((sum, item) => sum + item.price * item.qty, 0);
   const nama = namaPelanggan?.value || 'Pelanggan';
   const catatan = catatanPengiriman?.value || '-';
+
   const pesan = encodeURIComponent(
-    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${daftarPesanan}\n\n- Nama: ${nama}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatHarga(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Untuk pemesanan di area sekitar Palembang, pempek disiapkan dalam kondisi *rebus (tidak digoreng)* untuk menjaga kualitas selama pengantaran. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
+    `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${daftarPesanan}\n\n- Nama: ${nama}\n- Metode Pengiriman: ${labelMetode}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatHarga(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Untuk pemesanan di area sekitar Palembang, pempek disiapkan dalam kondisi *rebus (tidak digoreng)* untuk menjaga kualitas selama pengantaran. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
   );
   window.open(`https://wa.me/6288287041072?text=${pesan}`, '_blank');
 });
