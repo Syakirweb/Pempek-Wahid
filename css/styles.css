@@ -81,7 +81,7 @@ html {
   width: 58px;
   height: 58px;
   object-fit: contain;
-  border-radius: 16px;
+  border-radius: 50%;
   box-shadow: 0 8px 18px rgba(98, 43, 20, 0.12);
 }
 
@@ -90,7 +90,7 @@ html {
   height: 92px;
   object-fit: contain;
   align-self: center;
-  border-radius: 24px;
+  border-radius: 50%;
 }
 
 .text-danger-custom {

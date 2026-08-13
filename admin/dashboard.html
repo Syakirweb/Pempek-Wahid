@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin — Pempek Wahid</title>
+  <meta name="description" content="Dashboard admin Pempek Wahid untuk memantau order, revenue, dan produk terlaris hari ini." />
+  <link rel="icon" type="image/svg+xml" href="../images/logo.svg" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ===========================
+       DESIGN TOKENS (Light Theme - Warm Cream / Chocolate)
+    =========================== */
+    :root {
+      --brand:        #622b14; /* Deep warm brown (fried pempek & cuko) */
+      --brand-dark:   #42210b; /* Dark chocolate */
+      --brand-light:  #fff3c2; /* Soft banana yellow / cream */
+      --brand-glow:   rgba(98, 43, 20, 0.08);
+      --accent:       #faab70; /* Warm coral orange */
+      --accent-light: #fff5ea; /* Very soft orange tint */
+
+      --bg:           #fbffe8; /* Authentic brand light cream background */
+      --bg2:          #ffffff; /* Clean white card backgrounds */
+      --bg3:          #fdfef6; /* Light cream hover state */
+      --bg4:          #f7ebd3; /* Warm tan accent border/background */
+      --border:       rgba(98, 43, 20, 0.08);
+      --border-hover: rgba(98, 43, 20, 0.16);
+
+      --text:         #42210b; /* Primary dark brown */
+      --text-muted:   #8c6239; /* Muted warm brown */
+      --text-dim:     #b89b80; /* Super muted text */
+
+      --green:        #27ae60;
+      --green-bg:     rgba(39,174,96,0.06);
+      --yellow:       #f39c12;
+      --yellow-bg:    rgba(243,156,18,0.06);
+      --red:          #c0392b;
+      --red-bg:       rgba(192,57,43,0.06);
+      --blue:         #2980b9;
+      --blue-bg:      rgba(41,128,185,0.06);
+
+      --radius:       16px;
+      --radius-sm:    10px;
+      --radius-xs:    6px;
+      --shadow:       0 8px 30px rgba(98, 43, 20, 0.05);
+      --shadow-sm:    0 4px 16px rgba(98, 43, 20, 0.03);
+      --transition:   0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===========================
+       RESET & BASE
+    =========================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; font-family: inherit; }
+    img { max-width: 100%; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--brand-light); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ===========================
+       LAYOUT SHELL
+    =========================== */
+    .shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===========================
+       SIDEBAR
+    =========================== */
+    .sidebar {
+      width: 260px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 200;
+      transition: transform var(--transition);
+    }
+    .sidebar-header {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-brand-logo {
+      width: 36px; height: 36px;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+    .sidebar-brand-text h2 {
+      font-size: 15px; font-weight: 800;
+      color: var(--brand-primary); line-height: 1.2;
+    }
+    .sidebar-brand-text p {
+      font-size: 11px; color: var(--text-muted); font-weight: 500;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 20px 12px;
+      overflow-y: auto;
+    }
+    .nav-section-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0 12px 8px;
+      margin-top: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600;
+      color: var(--text-muted);
+      transition: all var(--transition);
+      margin-bottom: 2px;
+      border: 1px solid transparent; background: none; width: 100%; text-align: left;
+    }
+    .nav-item svg { flex-shrink: 0; opacity: 0.7; }
+    .nav-item:hover {
+      background: var(--bg3);
+      color: var(--brand-dark);
+      border-color: var(--border);
+    }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(98, 43, 20, 0.08), rgba(250, 171, 112, 0.04));
+      color: var(--brand);
+      border: 1px solid rgba(98, 43, 20, 0.12);
+    }
+    .nav-item.active svg { opacity: 1; }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      background: none;
+      border: 1px solid rgba(98, 43, 20, 0.12);
+      color: var(--text-muted);
+      font-size: 14px; font-weight: 600;
+      transition: all var(--transition);
+    }
+    .logout-btn:hover {
+      background: var(--red-bg);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    /* Mobile toggle */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 16px; left: 16px;
+      z-index: 300;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      width: 42px; height: 42px;
+      align-items: center; justify-content: center;
+      color: var(--text);
+    }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(98, 43, 20, 0.2);
+      z-index: 190;
+      backdrop-filter: blur(2px);
+    }
+
+    /* ===========================
+       MAIN CONTENT
+    =========================== */
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .topbar-left h1 {
+      font-size: 20px; font-weight: 800;
+      color: var(--brand);
+    }
+    .topbar-left p {
+      font-size: 13px; color: var(--text-muted); margin-top: 1px;
+    }
+    .topbar-right {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .topbar-date {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-muted);
+    }
+    .topbar-badge {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+      color: #fff;
+      box-shadow: 0 4px 12px var(--brand-glow);
+    }
+
+    /* Page content */
+    .page-content {
+      padding: 32px;
+      flex: 1;
+    }
+
+    /* Loading overlay */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    #loadingOverlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-ring {
+      width: 56px; height: 56px;
+      border: 4px solid var(--brand-light);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text {
+      font-size: 14px; font-weight: 600; color: var(--text-muted);
+    }
+
+    /* ===========================
+       STAT CARDS
+    =========================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all var(--transition);
+      cursor: default;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-card.red::before   { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--green), #2ecc71); }
+    .stat-card.blue::before  { background: linear-gradient(90deg, var(--blue), #5dade2); }
+    .stat-card.orange::before{ background: linear-gradient(90deg, var(--accent), var(--brand-light)); }
+
+    .stat-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    .stat-glow {
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.08;
+    }
+    .stat-card.red .stat-glow   { background: var(--brand); }
+    .stat-card.green .stat-glow { background: var(--green); }
+    .stat-card.blue .stat-glow  { background: var(--blue); }
+    .stat-card.orange .stat-glow{ background: var(--accent); }
+
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .stat-card.red .stat-icon   { background: var(--red-bg); }
+    .stat-card.green .stat-icon { background: var(--green-bg); }
+    .stat-card.blue .stat-icon  { background: var(--blue-bg); }
+    .stat-card.orange .stat-icon{ background: var(--yellow-bg); }
+
+    .stat-label {
+      font-size: 12px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 28px; font-weight: 800;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .stat-card.red .stat-value   { color: var(--red); }
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.blue .stat-value  { color: var(--blue); }
+    .stat-card.orange .stat-value{ color: var(--brand); }
+
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+    .stat-change.up   { background: var(--green-bg); color: var(--green); }
+    .stat-change.down { background: var(--red-bg); color: var(--red); }
+    .stat-change.neutral { background: var(--bg3); color: var(--text-muted); }
+
+    /* ===========================
+       SECTION CARDS
+    =========================== */
+    .section-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .section-card:hover { border-color: var(--border-hover); }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px; font-weight: 700;
+      color: var(--brand-dark);
+    }
+    .section-title-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-xs);
+      background: var(--accent-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand);
+    }
+
+    /* ===========================
+       GRID 2-COLUMN LAYOUT
+    =========================== */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* ===========================
+       CHART CONTAINER
+    =========================== */
+    .chart-wrap {
+      padding: 24px;
+      height: 300px;
+      position: relative;
+    }
+    .chart-wrap canvas {
+      max-height: 100%;
+    }
+
+    /* ===========================
+       TOP PRODUCTS TABLE
+    =========================== */
+    .products-table-wrap {
+      padding: 8px 0;
+    }
+    .product-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    .product-row:last-child { border-bottom: none; }
+    .product-row:hover { background: var(--bg3); }
+    .product-rank {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .rank-1 { background: linear-gradient(135deg, var(--brand-light), var(--accent)); color: var(--brand-dark); }
+    .rank-2 { background: var(--bg4); color: var(--text-muted); }
+    .rank-3 { background: var(--accent-light); color: var(--text-muted); }
+    .rank-other { background: var(--bg3); color: var(--text-dim); }
+
+    .product-info { flex: 1; min-width: 0; }
+    .product-name {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--brand-dark);
+    }
+    .product-price {
+      font-size: 12px; color: var(--text-muted); font-weight: 500;
+    }
+    .product-bar-wrap {
+      flex: 1; max-width: 120px;
+    }
+    .product-bar-bg {
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .product-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+      border-radius: 99px;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .product-qty {
+      font-size: 13px; font-weight: 700;
+      color: var(--brand-dark);
+      text-align: right;
+      min-width: 36px;
+    }
+    .product-qty span {
+      font-size: 11px; font-weight: 500; color: var(--text-muted);
+      display: block;
+    }
+
+    /* ===========================
+       ORDER TABLE
+    =========================== */
+    .orders-table-container {
+      overflow-x: auto;
+    }
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .orders-table thead tr {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .orders-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .orders-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      color: var(--brand-dark);
+    }
+    .orders-table tbody tr:hover { background: var(--bg3); }
+    .orders-table tbody tr:last-child td { border-bottom: none; }
+
+    .order-id {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .order-product { font-weight: 600; }
+    .order-price { font-weight: 700; color: var(--brand); }
+    .order-time { font-size: 12px; color: var(--text-muted); }
+
+    /* Status badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px; font-weight: 700;
+      text-transform: capitalize;
+      white-space: nowrap;
+    }
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .badge.selesai    { background: var(--green-bg); color: var(--green); }
+    .badge.selesai .badge-dot { background: var(--green); }
+    .badge.diproses   { background: var(--yellow-bg); color: var(--yellow); }
+    .badge.diproses .badge-dot { background: var(--yellow); }
+    .badge.dikirim    { background: var(--blue-bg); color: var(--blue); }
+    .badge.dikirim .badge-dot { background: var(--blue); }
+    .badge.batal      { background: var(--red-bg); color: var(--red); }
+    .badge.batal .badge-dot { background: var(--red); }
+    .badge.menunggu   { background: rgba(243,156,18,0.06); color: var(--text-muted); }
+    .badge.menunggu .badge-dot { background: var(--text-muted); }
+
+    /* ===========================
+       FILTERS BAR
+    =========================== */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .filter-select {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color var(--transition);
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--brand); }
+    .filter-select option { background: var(--bg2); }
+
+    .search-wrap {
+      position: relative;
+      flex: 1; max-width: 280px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 12px 8px 36px;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-input:focus { border-color: var(--brand); }
+    .search-icon {
+      position: absolute;
+      left: 10px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .filters-count {
+      margin-left: auto;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ===========================
+       PAGINATION
+    =========================== */
+    .pagination-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pagination-info {
+      font-size: 13px; color: var(--text-muted); font-weight: 500;
+    }
+    .pagination-btns {
+      display: flex; gap: 6px;
+    }
+    .page-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px; font-weight: 600;
+      padding: 6px 12px;
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: var(--bg3);
+      border-color: var(--border-hover);
+      color: var(--brand-dark);
+    }
+    .page-btn.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ===========================
+       REFRESH BTN
+    =========================== */
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px; font-weight: 600;
+      padding: 7px 14px;
+      transition: all var(--transition);
+    }
+    .refresh-btn:hover {
+      background: var(--bg3);
+      border-color: var(--border-hover);
+      color: var(--brand);
+    }
+    .refresh-btn svg { transition: transform 0.5s ease; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
+
+    /* ===========================
+       EMPTY STATE
+    =========================== */
+    .empty-state {
+      text-align: center;
+      padding: 56px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { margin-bottom: 16px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; font-weight: 600; }
+    .empty-state span { font-size: 13px; color: var(--text-dim); }
+
+    /* ===========================
+       SEED MODAL
+    =========================== */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(98, 43, 20, 0.25);
+      z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1; pointer-events: all;
+    }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 540px;
+      width: 100%;
+      box-shadow: 0 12px 40px rgba(98, 43, 20, 0.1);
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .modal-backdrop.open .modal-box {
+      transform: scale(1);
+    }
+    .modal-title {
+      font-size: 18px; font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--brand-dark);
+    }
+    .modal-desc {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 24px; line-height: 1.7;
+    }
+    .modal-progress {
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 99px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .modal-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .modal-progress-text {
+      font-size: 12px; color: var(--text-muted); font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px; font-weight: 700;
+      padding: 11px 22px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 12px var(--brand-glow);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px var(--brand-glow); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 14px; font-weight: 600;
+      padding: 11px 22px;
+      transition: all var(--transition);
+    }
+    .btn-ghost:hover { background: var(--bg3); color: var(--brand); }
+
+    /* ===========================
+       TOAST
+    =========================== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      font-size: 13px; font-weight: 600;
+      color: var(--brand-dark);
+      box-shadow: 0 8px 24px rgba(98, 43, 20, 0.08);
+      display: flex; align-items: center; gap: 10px;
+      min-width: 260px; max-width: 360px;
+      animation: toastIn 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error   { border-left: 3px solid var(--red); }
+    .toast.info    { border-left: 3px solid var(--blue); }
+    @keyframes toastIn {
+      from { transform: translateX(110%); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ===========================
+       HEADER ACTIONS (seed btn)
+    =========================== */
+    .seed-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px; font-weight: 700;
+      padding: 7px 14px;
+      transition: all var(--transition);
+    }
+    .seed-btn:hover {
+      background: var(--bg3);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    /* ===========================
+       SKELETON LOADING
+    =========================== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-xs);
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ===========================
+       RESPONSIVE
+    =========================== */
+    @media (max-width: 1100px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: flex; }
+      .sidebar-overlay.open { display: block; }
+      .main { margin-left: 0; }
+      .topbar { padding: 14px 16px 14px 68px; }
+      .page-content { padding: 16px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stat-value { font-size: 22px; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .topbar-date { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+  <div class="loader-ring"></div>
+  <p class="loader-text">Memuat data dashboard…</p>
+</div>
+
+<!-- Sidebar toggle (mobile) -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- SHELL -->
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img src="../images/logo.svg" alt="Logo Pempek Wahid" class="sidebar-brand-logo">
+        <div class="sidebar-brand-text">
+          <h2>Pempek Wahid</h2>
+          <p>Panel Administrator</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Navigasi Admin">
+      <div class="nav-section-label">Menu Utama</div>
+      <button class="nav-item active" id="navDashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <a href="admin.html" class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+        Kelola Produk
+      </a>
+      <a href="admin.html" class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Kelola Ulasan
+      </a>
+      <div class="nav-section-label" style="margin-top:16px;">Navigasi</div>
+      <a href="../index.html" class="nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Kembali ke Website
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" id="logoutBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Dashboard</h1>
+        <p id="topbarDate">Memuat tanggal…</p>
+      </div>
+      <div class="topbar-right">
+        <button class="seed-btn" id="openSeedModal" title="Isi data dummy ke Firestore">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Seed Data Dummy
+        </button>
+        <button class="seed-btn" id="resetDataBtn" title="Reset Semua Data Order di Firestore" style="background:rgba(231,76,60,0.15); border-color:rgba(231,76,60,0.3); color:#f5b7b1;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          Reset Data
+        </button>
+        <button class="refresh-btn" id="refreshBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+        <div class="topbar-date" id="topbarTime">--:--</div>
+        <div class="topbar-badge">PW</div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+
+      <!-- STAT CARDS -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- card 1: total order hari ini -->
+        <div class="stat-card red">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+          <div class="stat-label">Order Hari Ini</div>
+          <div class="stat-value" id="statTodayOrders">—</div>
+          <span class="stat-change neutral" id="statTodayOrdersChange">loading…</span>
+        </div>
+        <!-- card 2: revenue hari ini -->
+        <div class="stat-card green">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="stat-label">Revenue Hari Ini</div>
+          <div class="stat-value" id="statTodayRevenue">—</div>
+          <span class="stat-change neutral" id="statTodayRevenueChange">loading…</span>
+        </div>
+        <!-- card 3: total order keseluruhan -->
+        <div class="stat-card blue">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="stat-label">Total Semua Order</div>
+          <div class="stat-value" id="statAllOrders">—</div>
+          <span class="stat-change neutral" id="statAllOrdersChange">loading…</span>
+        </div>
+        <!-- card 4: success rate -->
+        <div class="stat-card orange">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="stat-label">Success Rate</div>
+          <div class="stat-value" id="statSuccessRate">—</div>
+          <span class="stat-change neutral" id="statSuccessRateChange">loading…</span>
+        </div>
+      </div>
+
+      <!-- 2-COLUMN: Chart + Top Products -->
+      <div class="grid-2">
+        <!-- Chart Card -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <div class="section-title-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              Order 7 Hari Terakhir
+            </div>
+            <span style="font-size:12px;color:var(--text-muted);">Bar Chart</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="ordersChart" aria-label="Grafik order 7 hari terakhir"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Products Card -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">
+              <div class="section-title-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              Top 3 Produk Terlaris
+            </div>
+            <span style="font-size:12px;color:var(--text-muted);">Semua waktu</span>
+          </div>
+          <div class="products-table-wrap" id="topProductsWrap">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER LIST TERBARU -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">
+            <div class="section-title-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            Order List Terbaru
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:12px;color:var(--text-muted);" id="ordersCountBadge">— entri</span>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Cari produk atau ID…" />
+          </div>
+          <select id="filterStatus" class="filter-select">
+            <option value="">Semua Status</option>
+            <option value="selesai">Selesai</option>
+            <option value="diproses">Diproses</option>
+            <option value="dikirim">Dikirim</option>
+            <option value="menunggu">Menunggu</option>
+            <option value="batal">Batal</option>
+          </select>
+          <select id="filterSort" class="filter-select">
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
+            <option value="price_desc">Harga ↓</option>
+            <option value="price_asc">Harga ↑</option>
+          </select>
+          <span class="filters-count" id="filtersCount"></span>
+        </div>
+
+        <!-- Table -->
+        <div class="orders-table-container">
+          <table class="orders-table" id="ordersTable" role="table">
+            <thead>
+              <tr>
+                <th scope="col">ID Order</th>
+                <th scope="col">Produk</th>
+                <th scope="col">Harga</th>
+                <th scope="col">Waktu</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <p>Memuat data order…</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+          <div class="pagination-info" id="paginationInfo">Menampilkan 0–0 dari 0</div>
+          <div class="pagination-btns" id="paginationBtns"></div>
+        </div>
+      </div>
+    </div><!-- /page-content -->
+  </main>
+</div>
+
+<!-- SEED DATA MODAL -->
+<div class="modal-backdrop" id="seedModal" role="dialog" aria-modal="true" aria-labelledby="seedModalTitle">
+  <div class="modal-box">
+    <h2 class="modal-title" id="seedModalTitle">Seed Data Dummy</h2>
+    <p class="modal-desc">
+      Ini akan membuat <strong>600–1000 order dummy per hari</strong> selama <strong>30 hari terakhir</strong> ke koleksi <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px;">orders</code> di Firestore. Total estimasi: <strong>~18.000–30.000 order</strong>.<br><br>
+      Proses ini memakan waktu beberapa menit. Jangan tutup tab selama proses berlangsung.<br><br>
+      <strong style="color:var(--brand-dark);">Pastikan Firestore rules mengizinkan write tanpa auth (untuk testing), atau kamu sudah login sebagai admin.</strong>
+    </p>
+    <div class="modal-progress" id="seedProgress" style="display:none;">
+      <div class="modal-progress-fill" id="seedProgressFill"></div>
+    </div>
+    <div class="modal-progress-text" id="seedProgressText" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="closeSeedModal">Batal</button>
+      <button class="btn-primary" id="startSeedBtn">Mulai Seed</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+<script>
+/* ================================================
+   FIREBASE CONFIG
+================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyBQS46bKPUJV24qO2vsbprUO3BzetGBvD0',
+  authDomain: 'pempek-wahid.firebaseapp.com',
+  databaseURL: 'https://pempek-wahid-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'pempek-wahid',
+  storageBucket: 'pempek-wahid.firebasestorage.app',
+  messagingSenderId: '556954876004',
+  appId: '1:556954876004:web:d1d167fc80e99f893ec771',
+  measurementId: 'G-1D5N5PP7K4'
+};
+
+// 5 produk asli Pempek Wahid
+const PRODUCTS = [
+  { name: 'Pempek Telur (Kapal Selam)', price: 1000 },
+  { name: 'Pempek Lenjer',              price: 1000 },
+  { name: 'Pempek Bulat (Adaan)',       price: 1000 },
+  { name: 'Pempek Kulit Lenjer',        price: 1000 },
+  { name: 'Pempek Kulit Gepeng',        price: 1000 },
+];
+const STATUSES = ['selesai', 'selesai', 'selesai', 'diproses', 'dikirim', 'menunggu', 'batal'];
+const PER_PAGE = 20;
+
+/* ================================================
+   STATE
+================================================ */
+let db = null;
+let allOrders = [];
+let filteredOrders = [];
+let currentPage = 1;
+let chart = null;
+
+/* ================================================
+   UTILS
+================================================ */
+function fmt(num) {
+  return 'Rp ' + num.toLocaleString('id-ID');
+}
+function fmtShort(num) {
+  if (num >= 1_000_000) return 'Rp ' + (num / 1_000_000).toFixed(1) + ' jt';
+  if (num >= 1_000)     return 'Rp ' + (num / 1_000).toFixed(0) + ' rb';
+  return 'Rp ' + num;
+}
+function fmtDatetime(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' })
+    + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+}
+function isToday(ts) {
+  if (!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const today = new Date();
+  return d.getDate() === today.getDate()
+      && d.getMonth() === today.getMonth()
+      && d.getFullYear() === today.getFullYear();
+}
+function isYesterday(ts) {
+  if (!ts) return false;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  return d.getDate() === yesterday.getDate()
+      && d.getMonth() === yesterday.getMonth()
+      && d.getFullYear() === yesterday.getFullYear();
+}
+function daysAgo(n) {
+  const d = new Date(); d.setDate(d.getDate() - n); return d;
+}
+function shortDate(d) {
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+}
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* ================================================
+   TOAST
+================================================ */
+function showToast(msg, type = 'info', duration = 4000) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  let icon = '';
+  if (type === 'success') {
+    icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  } else if (type === 'error') {
+    icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  } else {
+    icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+  }
+  el.innerHTML = `<span style="display:flex;align-items:center;">${icon}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+/* ================================================
+   SIDEBAR MOBILE
+================================================ */
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+/* ================================================
+   CLOCK
+================================================ */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('topbarTime').textContent =
+    now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('topbarDate').textContent =
+    now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ================================================
+   FIREBASE INIT
+================================================ */
+function initFirebase() {
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+}
+
+/* ================================================
+   FETCH ALL ORDERS
+================================================ */
+async function fetchOrders() {
+  if (!db) return [];
+  try {
+    const snap = await db.collection('orders')
+      .orderBy('timestamp', 'desc')
+      .get();
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (err) {
+    console.error('fetchOrders error:', err);
+    // Fallback without orderBy if index missing
+    try {
+      const snap = await db.collection('orders').get();
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      data.sort((a, b) => {
+        const tA = a.timestamp?.toDate?.() || new Date(0);
+        const tB = b.timestamp?.toDate?.() || new Date(0);
+        return tB - tA;
+      });
+      return data;
+    } catch (e2) {
+      console.error('fetchOrders fallback error:', e2);
+      showToast('Gagal memuat data orders dari Firestore.', 'error');
+      return [];
+    }
+  }
+}
+
+/* ================================================
+   STATS
+================================================ */
+function computeStats(orders) {
+  const todayOrders   = orders.filter(o => isToday(o.timestamp));
+  const yesterdayOrds = orders.filter(o => isYesterday(o.timestamp));
+
+  const todayCount    = todayOrders.length;
+  const yesterCount   = yesterdayOrds.length;
+  const todayRevenue  = todayOrders.filter(o => o.status === 'selesai').reduce((s, o) => s + (o.price || 0), 0);
+  const yesterRevenue = yesterdayOrds.filter(o => o.status === 'selesai').reduce((s, o) => s + (o.price || 0), 0);
+
+  const totalSelesai  = orders.filter(o => o.status === 'selesai').length;
+  const successRate   = orders.length ? Math.round(totalSelesai / orders.length * 100) : 0;
+
+  // Today change
+  function changeHTML(curr, prev, isPercent = false) {
+    if (prev === 0 && curr === 0) return '<span class="stat-change neutral">Tidak ada data kemarin</span>';
+    if (prev === 0) return '<span class="stat-change up">↑ Baru hari ini</span>';
+    const diff = curr - prev;
+    const pct  = Math.abs(Math.round(diff / prev * 100));
+    if (diff > 0) return `<span class="stat-change up">↑ +${pct}% vs kemarin</span>`;
+    if (diff < 0) return `<span class="stat-change down">↓ -${pct}% vs kemarin</span>`;
+    return '<span class="stat-change neutral">= Sama seperti kemarin</span>';
+  }
+
+  document.getElementById('statTodayOrders').textContent = todayCount;
+  document.getElementById('statTodayOrdersChange').outerHTML = changeHTML(todayCount, yesterCount);
+
+  document.getElementById('statTodayRevenue').textContent = fmtShort(todayRevenue);
+  document.getElementById('statTodayRevenueChange').outerHTML = changeHTML(todayRevenue, yesterRevenue);
+
+  document.getElementById('statAllOrders').textContent = orders.length.toLocaleString('id-ID');
+  document.getElementById('statAllOrdersChange').outerHTML =
+    `<span class="stat-change neutral">${totalSelesai.toLocaleString('id-ID')} selesai</span>`;
+
+  document.getElementById('statSuccessRate').textContent = successRate + '%';
+  document.getElementById('statSuccessRateChange').outerHTML =
+    `<span class="stat-change ${successRate >= 80 ? 'up' : successRate >= 50 ? 'neutral' : 'down'}">${successRate >= 80 ? '↑ Sangat baik' : successRate >= 50 ? 'Cukup baik' : '↓ Perlu perhatian'}</span>`;
+}
+
+/* ================================================
+   TOP 3 PRODUCTS
+================================================ */
+function renderTopProducts(orders) {
+  const map = {};
+  orders.forEach(o => {
+    if (o.items && Array.isArray(o.items)) {
+      o.items.forEach(item => {
+        const name = item.productName || item.name;
+        const qty = item.quantity || 0;
+        const price = item.price || 1000;
+        if (!map[name]) map[name] = { qty: 0, revenue: 0 };
+        map[name].qty += qty;
+        if (o.status === 'selesai') map[name].revenue += (qty * price);
+      });
+    } else if (o.productName) {
+      if (!map[o.productName]) map[o.productName] = { qty: 0, revenue: 0 };
+      map[o.productName].qty++;
+      if (o.status === 'selesai') map[o.productName].revenue += (o.price || 0);
+    }
+  });
+  const sorted = Object.entries(map)
+    .sort((a, b) => b[1].qty - a[1].qty)
+    .slice(0, 5); // show top 5
+  const max = sorted[0]?.[1].qty || 1;
+
+  const wrap = document.getElementById('topProductsWrap');
+  if (!sorted.length) {
+    wrap.innerHTML = `<div class="empty-state"><p>Belum ada data produk</p></div>`;
+    return;
+  }
+  const rankClass = (i) => i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+  wrap.innerHTML = sorted.map(([name, stat], i) => `
+    <div class="product-row">
+      <div class="product-rank ${rankClass(i)}">${i + 1}</div>
+      <div class="product-info">
+        <div class="product-name">${name}</div>
+        <div class="product-price">${fmt(stat.revenue)} revenue</div>
+      </div>
+      <div class="product-bar-wrap">
+        <div class="product-bar-bg">
+          <div class="product-bar-fill" style="width:${Math.round(stat.qty / max * 100)}%"></div>
+        </div>
+      </div>
+      <div class="product-qty">${stat.qty}<span>order</span></div>
+    </div>
+  `).join('');
+}
+
+/* ================================================
+   CHART.JS — 7-day bar chart
+================================================ */
+function renderChart(orders) {
+  const labels = [];
+  const counts = [];
+  const revenues = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = daysAgo(i);
+    labels.push(shortDate(day));
+    const dayOrders = orders.filter(o => {
+      if (!o.timestamp) return false;
+      const d = o.timestamp.toDate ? o.timestamp.toDate() : new Date(o.timestamp);
+      return d.getDate() === day.getDate()
+          && d.getMonth() === day.getMonth()
+          && d.getFullYear() === day.getFullYear();
+    });
+    counts.push(dayOrders.length);
+    revenues.push(dayOrders.filter(o => o.status === 'selesai').reduce((s, o) => s + (o.price || 0), 0));
+  }
+
+  const ctx = document.getElementById('ordersChart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Jumlah Order',
+          data: counts,
+          backgroundColor: 'rgba(98, 43, 20, 0.75)',
+          borderColor: 'rgba(98, 43, 20, 1)',
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Revenue (Rp)',
+          data: revenues,
+          type: 'line',
+          backgroundColor: 'rgba(250, 171, 112, 0.12)',
+          borderColor: 'rgba(250, 171, 112, 1)',
+          borderWidth: 2.5,
+          pointBackgroundColor: 'rgba(250, 171, 112, 1)',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y2',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#42210b', font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }, boxWidth: 14, padding: 20 }
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          borderColor: 'rgba(98, 43, 20, 0.1)',
+          borderWidth: 1,
+          titleColor: '#42210b',
+          bodyColor: '#8c6239',
+          padding: 14,
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? ` ${ctx.parsed.y} order`
+              : ` ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(98, 43, 20, 0.04)' },
+          ticks: { color: '#8c6239', font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' } }
+        },
+        y: {
+          position: 'left',
+          grid: { color: 'rgba(98, 43, 20, 0.04)' },
+          ticks: { color: '#8c6239', font: { family: 'Plus Jakarta Sans', size: 11 }, stepSize: 1 },
+          title: { display: true, text: 'Order', color: '#b89b80', font: { size: 11, family: 'Plus Jakarta Sans' } }
+        },
+        y2: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: '#8c6239',
+            font: { family: 'Plus Jakarta Sans', size: 11 },
+            callback: v => fmtShort(v)
+          },
+          title: { display: true, text: 'Revenue', color: '#b89b80', font: { size: 11, family: 'Plus Jakarta Sans' } }
+        }
+      }
+    }
+  });
+}
+
+/* ================================================
+   ORDER TABLE + PAGINATION + FILTER
+================================================ */
+function applyFilter() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const status = document.getElementById('filterStatus').value;
+  const sort   = document.getElementById('filterSort').value;
+
+  let data = [...allOrders];
+  if (search) data = data.filter(o =>
+    (o.productName || '').toLowerCase().includes(search) ||
+    (o.id || '').toLowerCase().includes(search)
+  );
+  if (status) data = data.filter(o => (o.status || '') === status);
+
+  data.sort((a, b) => {
+    if (sort === 'newest') {
+      const tA = a.timestamp?.toDate?.() || new Date(0);
+      const tB = b.timestamp?.toDate?.() || new Date(0);
+      return tB - tA;
+    } else if (sort === 'oldest') {
+      const tA = a.timestamp?.toDate?.() || new Date(0);
+      const tB = b.timestamp?.toDate?.() || new Date(0);
+      return tA - tB;
+    } else if (sort === 'price_desc') return (b.price || 0) - (a.price || 0);
+    else if (sort === 'price_asc')  return (a.price || 0) - (b.price || 0);
+    return 0;
+  });
+
+  filteredOrders = data;
+  currentPage = 1;
+  document.getElementById('filtersCount').textContent = `${data.length} hasil`;
+  renderTable();
+  renderPagination();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('ordersTableBody');
+  const start = (currentPage - 1) * PER_PAGE;
+  const end   = Math.min(start + PER_PAGE, filteredOrders.length);
+  const page  = filteredOrders.slice(start, end);
+
+  document.getElementById('paginationInfo').textContent =
+    `Menampilkan ${start + 1}–${end} dari ${filteredOrders.length}`;
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="5">
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Tidak ada order ditemukan</p>
+        <span>Coba ubah filter pencarian</span>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = page.map(o => {
+    const statusClass = (o.status || 'menunggu').toLowerCase().replace(/\s/g, '-');
+    const statusLabel = o.status || 'menunggu';
+    return `
+    <tr>
+      <td><span class="order-id">#${(o.id || '').slice(-8).toUpperCase()}</span></td>
+      <td><span class="order-product">${o.productName || '—'}</span></td>
+      <td><span class="order-price">${fmt(o.price || 0)}</span></td>
+      <td><span class="order-time">${fmtDatetime(o.timestamp)}</span></td>
+      <td><span class="badge ${statusClass}"><span class="badge-dot"></span>${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(filteredOrders.length / PER_PAGE);
+  const container  = document.getElementById('paginationBtns');
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" id="prevPage" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+
+  // Show limited pages
+  const range = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+      range.push(i);
+    }
+  }
+  let prev = null;
+  for (const p of range) {
+    if (prev && p - prev > 1) html += `<span class="page-btn" style="pointer-events:none;">…</span>`;
+    html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`;
+    prev = p;
+  }
+
+  html += `<button class="page-btn" id="nextPage" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
+  container.innerHTML = html;
+
+  container.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPage = parseInt(btn.dataset.page);
+      renderTable();
+      renderPagination();
+    });
+  });
+  container.querySelector('#prevPage')?.addEventListener('click', () => {
+    if (currentPage > 1) { currentPage--; renderTable(); renderPagination(); }
+  });
+  container.querySelector('#nextPage')?.addEventListener('click', () => {
+    if (currentPage < totalPages) { currentPage++; renderTable(); renderPagination(); }
+  });
+}
+
+/* ================================================
+   REFRESH
+================================================ */
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  await loadDashboard();
+  btn.classList.remove('spinning');
+  btn.disabled = false;
+  showToast('Dashboard berhasil diperbarui.', 'success');
+});
+
+/* ================================================
+   MAIN LOAD
+================================================ */
+async function loadDashboard() {
+  allOrders = await fetchOrders();
+  filteredOrders = [...allOrders];
+  document.getElementById('ordersCountBadge').textContent = allOrders.length.toLocaleString('id-ID') + ' entri';
+  computeStats(allOrders);
+  renderTopProducts(allOrders);
+  renderChart(allOrders);
+  applyFilter();
+}
+
+/* ================================================
+   SEED DATA
+================================================ */
+async function seedData(days) {
+  if (!db) { showToast('Firebase belum siap.', 'error'); return; }
+  const btn = document.getElementById('startSeedBtn');
+  const progressBar = document.getElementById('seedProgress');
+  const progressFill = document.getElementById('seedProgressFill');
+  const progressText = document.getElementById('seedProgressText');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Sedang menyemai…';
+  progressBar.style.display = 'block';
+  progressText.style.display = 'block';
+
+  const BATCH_SIZE = 100;
+  const now = new Date();
+
+  // Hitung total order: setiap hari 600–1000 order
+  let totalSeeded = 0;
+  let totalTarget = 0;
+  const dailyCounts = [];
+  for (let d = 0; d < days; d++) {
+    const count = rand(600, 1000);
+    dailyCounts.push(count);
+    totalTarget += count;
+  }
+
+  progressText.textContent = `Menyiapkan ${totalTarget.toLocaleString('id-ID')} order untuk ${days} hari…`;
+
+  for (let d = 0; d < days; d++) {
+    const dayCount = dailyCounts[d];
+    const dayDate = new Date(now);
+    dayDate.setDate(dayDate.getDate() - d);
+
+    let daySeeded = 0;
+    while (daySeeded < dayCount) {
+      const batch = db.batch();
+      const chunk = Math.min(BATCH_SIZE, dayCount - daySeeded);
+
+      for (let i = 0; i < chunk; i++) {
+        const status  = STATUSES[rand(0, STATUSES.length - 1)];
+        const ts = new Date(dayDate);
+        ts.setHours(rand(7, 21));     // jam operasional 07.00–21.00
+        ts.setMinutes(rand(0, 59));
+        ts.setSeconds(rand(0, 59));
+
+        // Determine how many distinct items to buy (1 to 4)
+        const numDistinct = rand(1, 4);
+        // Shuffle products list
+        const shuffled = [...PRODUCTS].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, numDistinct);
+
+        // Distribute total pcs (10 to 50)
+        let totalPcs = rand(10, 50);
+        const items = [];
+        
+        // Give at least 1 pc to each, then distribute the rest
+        let remaining = totalPcs - numDistinct;
+        for (let j = 0; j < numDistinct; j++) {
+          let qty = 1;
+          if (j === numDistinct - 1) {
+            qty += remaining;
+          } else {
+            const add = rand(0, remaining);
+            qty += add;
+            remaining -= add;
+          }
+          items.push({
+            productName: selected[j].name,
+            quantity: qty,
+            price: selected[j].price
+          });
+        }
+
+        const totalPrice = totalPcs * 1000;
+        const nameMap = {
+          'Pempek Telur (Kapal Selam)': 'Telur',
+          'Pempek Lenjer': 'Lenjer',
+          'Pempek Bulat (Adaan)': 'Adaan',
+          'Pempek Kulit Lenjer': 'K.Lenjer',
+          'Pempek Kulit Gepeng': 'K.Gepeng'
+        };
+        const summary = items.map(it => `${nameMap[it.productName] || it.productName} (${it.quantity})`).join(', ');
+
+        const ref = db.collection('orders').doc();
+        batch.set(ref, {
+          items: items,
+          productName: summary,
+          price: totalPrice,
+          timestamp: firebase.firestore.Timestamp.fromDate(ts),
+          status: status,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      await batch.commit();
+      daySeeded += chunk;
+      totalSeeded += chunk;
+
+      const pct = Math.round(totalSeeded / totalTarget * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent =
+        `Hari ${d + 1}/${days} — ${totalSeeded.toLocaleString('id-ID')} / ${totalTarget.toLocaleString('id-ID')} order (${pct}%)`;
+    }
+  }
+
+  btn.textContent = 'Selesai';
+  setTimeout(() => {
+    document.getElementById('seedModal').classList.remove('open');
+    btn.disabled = false;
+    btn.textContent = 'Mulai Seed';
+    progressBar.style.display = 'none';
+    progressText.style.display = 'none';
+    progressFill.style.width = '0%';
+    showToast(`${totalSeeded.toLocaleString('id-ID')} order dummy (${days} hari) berhasil ditambahkan!`, 'success', 6000);
+    loadDashboard();
+  }, 1500);
+}
+
+/* ================================================
+   RESET DATA
+================================================ */
+async function resetOrders() {
+  if (!db) { showToast('Firebase belum siap.', 'error'); return; }
+  if (!confirm('Apakah Anda yakin ingin MENGHAPUS SEMUA data order dari Firestore?\nTindakan ini tidak bisa dibatalkan!')) return;
+
+  const btn = document.getElementById('resetDataBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Menghapus...';
+
+  try {
+    let deletedCount = 0;
+    while (true) {
+      const snap = await db.collection('orders').limit(500).get();
+      if (snap.empty) break;
+
+      const batch = db.batch();
+      snap.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+
+      await batch.commit();
+      deletedCount += snap.size;
+      btn.innerHTML = `⏳ Menghapus (${deletedCount})...`;
+    }
+    showToast(`Berhasil menghapus ${deletedCount} data order!`, 'success');
+    await loadDashboard();
+  } catch (err) {
+    console.error('Reset error:', err);
+    showToast('Gagal menghapus data: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+document.getElementById('resetDataBtn').addEventListener('click', resetOrders);
+
+/* ================================================
+   SEED MODAL EVENTS
+================================================ */
+document.getElementById('openSeedModal').addEventListener('click', () => {
+  document.getElementById('seedModal').classList.add('open');
+});
+document.getElementById('closeSeedModal').addEventListener('click', () => {
+  document.getElementById('seedModal').classList.remove('open');
+});
+document.getElementById('seedModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('seedModal'))
+    document.getElementById('seedModal').classList.remove('open');
+});
+document.getElementById('startSeedBtn').addEventListener('click', () => {
+  seedData(30); // 30 hari, masing-masing 600–1000 order/hari
+});
+
+/* ================================================
+   FILTER EVENTS
+================================================ */
+document.getElementById('searchInput').addEventListener('input', applyFilter);
+document.getElementById('filterStatus').addEventListener('change', applyFilter);
+document.getElementById('filterSort').addEventListener('change', applyFilter);
+
+/* ================================================
+   LOGOUT
+================================================ */
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  if (firebase.apps.length) {
+    firebase.auth().signOut().catch(() => {});
+  }
+  window.location.href = 'login.html';
+});
+
+/* ================================================
+   INIT
+================================================ */
+async function init() {
+  try {
+    initFirebase();
+    await loadDashboard();
+  } catch (err) {
+    console.error('Init error:', err);
+    showToast('Gagal menginisialisasi Firebase. Cek koneksi internet.', 'error');
+  } finally {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('hidden');
+    setTimeout(() => overlay.remove(), 600);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -15,5 +15,13 @@ service cloud.firestore {
       allow update, delete: if request.auth != null;
     }
 
+
+    // Koleksi Orders: Dapat dibaca publik (dashboard admin), write hanya Admin terautentikasi
+    // Untuk seed data dummy tanpa auth, sementara ubah allow write: if true;
+    match /orders/{orderId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
   }
 }
