@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel - Pempek Wahid</title>
   <link rel="icon" type="image/svg+xml" href="../images/logo.svg" />
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="../css/styles.css" rel="stylesheet" />
@@ -142,6 +147,11 @@
         <li class="nav-item" role="presentation">
           <button class="nav-link fw-bold" id="menu-tab" data-bs-toggle="tab" data-bs-target="#menu-pane" type="button" role="tab">
             <i class="bi bi-grid-3x3-gap me-1"></i>Kelola Katalog
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-bold" id="status-tab" data-bs-toggle="tab" data-bs-target="#status-pane" type="button" role="tab">
+            <i class="bi bi-clock-history me-1"></i>Status Operasional Toko
           </button>
         </li>
       </ul>
@@ -317,6 +327,131 @@
             </div>
           </div>
         </div> <!-- End Tab 2 -->
+
+        <!-- ========== TAB 3: Status Operasional Toko ========== -->
+        <div class="tab-pane fade" id="status-pane" role="tabpanel" tabindex="0">
+          <div class="row g-4">
+            <!-- Left: Store Status Form Card -->
+            <div class="col-lg-6">
+              <div class="card admin-page-card h-100">
+                <div class="card-body p-4">
+                  <h3 class="h5 fw-bold mb-3 d-flex align-items-center gap-2">
+                    <span>📊 Status Operasional Toko</span>
+                  </h3>
+
+                  <!-- Live Current Status Display -->
+                  <div id="current-status-display" class="mb-4 p-3 bg-light rounded-3 border">
+                    <small class="text-muted d-block mb-1 font-xs fw-semibold">Status Saat Ini (Real-Time):</small>
+                    <div id="current-status-text">
+                      <span class="badge bg-secondary px-3 py-2 fs-6">Memuat status...</span>
+                    </div>
+                  </div>
+
+                  <!-- Toggle: Normal vs Paksa Tutup -->
+                  <div class="mb-4">
+                    <label class="form-label small fw-semibold text-muted">Kontrol Status Toko</label>
+                    <div class="btn-group d-flex w-100" role="group">
+                      <input type="radio" class="btn-check" name="status-mode" id="status-normal" value="normal" checked>
+                      <label class="btn btn-outline-success py-2 fw-semibold flex-grow-1" for="status-normal">
+                        ✅ Buka Normal (Jadwal Otomatis)
+                      </label>
+
+                      <input type="radio" class="btn-check" name="status-mode" id="status-closed" value="closed">
+                      <label class="btn btn-outline-danger py-2 fw-semibold flex-grow-1" for="status-closed">
+                        🔴 Paksa Tutup Khusus
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Conditional: Alasan Tutup (Muncul jika "Paksa Tutup Khusus") -->
+                  <div id="closed-reason-group" class="mb-4 d-none">
+                    <label class="form-label small fw-semibold text-muted">Pilih Alasan Tutup Cepat (Preset):</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                      <button type="button" class="btn btn-sm btn-outline-secondary preset-reason" data-reason-type="illness" data-reason-text="Sakit pemilik">
+                        🤒 Sakit Pemilik
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary preset-reason" data-reason-type="sold_out" data-reason-text="Stok habis hari ini">
+                        🔥 Sold Out / Stok Habis
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary preset-reason" data-reason-type="holiday" data-reason-text="Libur khusus hari raya">
+                        🎉 Libur Khusus
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary preset-reason" data-reason-type="maintenance" data-reason-text="Perbaikan / Maintenance outlet">
+                        🔧 Maintenance
+                      </button>
+                    </div>
+
+                    <label class="form-label small fw-semibold text-muted" for="closed-reason-custom">Atau Tulis Alasan Khusus (Tampil di Website):</label>
+                    <input 
+                      type="text" 
+                      id="closed-reason-custom" 
+                      class="form-control" 
+                      placeholder="Misal: Acara keluarga / Istirahat toko"
+                      maxlength="150"
+                    >
+                    <small class="text-muted font-xs">Maksimal 150 karakter.</small>
+                  </div>
+
+                  <!-- Operating Hours -->
+                  <div class="mb-4 pt-3 border-top">
+                    <label class="form-label small fw-semibold text-muted mb-2">⏰ Jam Operasi Otomatis Harian (WIB)</label>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <label for="hours-start" class="form-label font-xs text-muted">Jam Mulai Buka (0-23):</label>
+                        <input type="number" id="hours-start" class="form-control" min="0" max="23" placeholder="16" value="16">
+                      </div>
+                      <div class="col-6">
+                        <label for="hours-end" class="form-label font-xs text-muted">Jam Berakhir Operasi (0-23):</label>
+                        <input type="number" id="hours-end" class="form-control" min="0" max="23" placeholder="18" value="18">
+                      </div>
+                    </div>
+                    <small class="text-muted font-xs d-block mt-1">Format 24 jam (misal 16 = 16:00 WIB, 18 = 18:00 WIB).</small>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="d-flex gap-2">
+                    <button id="btn-save-status" class="btn btn-danger-custom flex-grow-1 rounded-pill py-2 fw-bold">
+                      💾 Simpan Perubahan Status
+                    </button>
+                    <button id="btn-reset-status" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                      ↺ Reset
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Audit Trail Log History -->
+            <div class="col-lg-6">
+              <div class="card admin-page-card h-100">
+                <div class="card-body p-4">
+                  <h3 class="h5 fw-bold mb-3 d-flex align-items-center gap-2">
+                    <span>📝 Riwayat Perubahan Status (Audit Trail)</span>
+                  </h3>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Waktu</th>
+                          <th>Admin</th>
+                          <th>Aksi</th>
+                          <th>Keterangan / Alasan</th>
+                        </tr>
+                      </thead>
+                      <tbody id="history-table-body">
+                        <tr><td colspan="4" class="text-center text-muted py-3">Memuat riwayat status...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button id="btn-load-more-history" class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-2">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Muat Lebih Banyak Riwayat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> <!-- End Tab 3 -->
       </div> <!-- End Tabs Content -->
     </div>
   </div>
@@ -361,6 +496,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="../js/firebase.js"></script>
+  <script src="../js/utils/time.js"></script>
+  <script src="../js/utils/storeStatus.js"></script>
   <script>
     // --- GUARD: Cek localStorage terlebih dahulu ---
     if (localStorage.getItem('adminLoggedIn') !== 'true') {
@@ -1041,6 +1178,186 @@
     // Event Listeners untuk filter produk
     document.getElementById('menuSearchInput')?.addEventListener('input', renderMenuCatalog);
     document.getElementById('menuFilterCategory')?.addEventListener('change', renderMenuCatalog);
+
+    // --- TAB 3: STORE STATUS CONTROL & AUDIT LOGS ---
+    let currentStoreStatusData = {};
+    let logHistoryLimit = 10;
+
+    function initAdminStoreStatus() {
+      const modeRadios = document.querySelectorAll('input[name="status-mode"]');
+      modeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const closedReasonGroup = document.getElementById('closed-reason-group');
+          if (e.target.value === 'closed') {
+            closedReasonGroup.classList.remove('d-none');
+          } else {
+            closedReasonGroup.classList.add('d-none');
+          }
+        });
+      });
+
+      document.querySelectorAll('.preset-reason').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const targetBtn = e.target.closest('button');
+          const text = targetBtn.dataset.reasonText;
+          const input = document.getElementById('closed-reason-custom');
+          if (input) input.value = text;
+          document.querySelectorAll('.preset-reason').forEach(b => b.classList.remove('active', 'btn-primary'));
+          targetBtn.classList.add('active', 'btn-primary');
+        });
+      });
+
+      document.getElementById('btn-save-status')?.addEventListener('click', saveAdminStoreStatus);
+      document.getElementById('btn-reset-status')?.addEventListener('click', loadAdminStoreStatus);
+      document.getElementById('btn-load-more-history')?.addEventListener('click', () => {
+        logHistoryLimit += 10;
+        loadAdminStatusLogs();
+      });
+
+      loadAdminStoreStatus();
+      loadAdminStatusLogs();
+    }
+
+    function loadAdminStoreStatus() {
+      if (window.firebaseManager?.onSnapshotStoreStatus) {
+        window.firebaseManager.onSnapshotStoreStatus((data) => {
+          currentStoreStatusData = data || {};
+          populateStoreStatusForm(currentStoreStatusData);
+          updateAdminStatusDisplay(currentStoreStatusData);
+        });
+      }
+    }
+
+    function populateStoreStatusForm(data) {
+      const isClosed = data.isClosed === true;
+      const radioNormal = document.getElementById('status-normal');
+      const radioClosed = document.getElementById('status-closed');
+      const reasonGroup = document.getElementById('closed-reason-group');
+      const customReasonInput = document.getElementById('closed-reason-custom');
+      const hoursStartInput = document.getElementById('hours-start');
+      const hoursEndInput = document.getElementById('hours-end');
+
+      if (isClosed) {
+        if (radioClosed) radioClosed.checked = true;
+        if (reasonGroup) reasonGroup.classList.remove('d-none');
+      } else {
+        if (radioNormal) radioNormal.checked = true;
+        if (reasonGroup) reasonGroup.classList.add('d-none');
+      }
+
+      if (customReasonInput) customReasonInput.value = data.closedReason || '';
+      if (hoursStartInput) hoursStartInput.value = data.operatingHoursStart !== undefined ? data.operatingHoursStart : 16;
+      if (hoursEndInput) hoursEndInput.value = data.operatingHoursEnd !== undefined ? data.operatingHoursEnd : 18;
+    }
+
+    function updateAdminStatusDisplay(data) {
+      const displayEl = document.getElementById('current-status-text');
+      if (displayEl && typeof window.StoreStatusManager === 'function') {
+        const mgr = new window.StoreStatusManager();
+        const statusObj = mgr.determineStatus(data);
+        displayEl.innerHTML = `<span class="badge bg-${statusObj.bannerColor} px-3 py-2 fs-6 fw-bold">${statusObj.bannerText}</span>`;
+      }
+    }
+
+    async function saveAdminStoreStatus() {
+      const btn = document.getElementById('btn-save-status');
+      if (btn) btn.disabled = true;
+
+      try {
+        const isClosed = document.getElementById('status-closed')?.checked === true;
+        const closedReason = document.getElementById('closed-reason-custom')?.value?.trim() || '';
+        const hoursStartVal = parseInt(document.getElementById('hours-start')?.value, 10);
+        const hoursEndVal = parseInt(document.getElementById('hours-end')?.value, 10);
+
+        if (isClosed && !closedReason) {
+          tampilkanToast('Masukkan alasan tutup jika memilih Paksa Tutup Khusus.', 'danger');
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        if (isNaN(hoursStartVal) || hoursStartVal < 0 || hoursStartVal > 23) {
+          tampilkanToast('Jam mulai operasi harus antara 0 dan 23.', 'danger');
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        if (isNaN(hoursEndVal) || hoursEndVal < 0 || hoursEndVal > 23) {
+          tampilkanToast('Jam berakhir operasi harus antara 0 dan 23.', 'danger');
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        const activePresetBtn = document.querySelector('.preset-reason.active');
+        const closedReasonType = activePresetBtn ? activePresetBtn.dataset.reasonType : (isClosed ? 'event' : 'none');
+
+        const updatePayload = {
+          isClosed,
+          closedReason,
+          closedReasonType,
+          operatingHoursStart: hoursStartVal,
+          operatingHoursEnd: hoursEndVal
+        };
+
+        const currentUser = window.firebaseManager?.initFirebase?.()?.auth?.currentUser;
+        const adminEmail = currentUser?.email || localStorage.getItem('adminEmail') || 'admin@pempekwahid.com';
+
+        const res = await window.firebaseManager?.updateStoreStatus?.(updatePayload, adminEmail);
+
+        if (res?.ok) {
+          const action = isClosed ? 'manual_close' : 'manual_open';
+          await window.firebaseManager?.logStatusChange?.(
+            action,
+            closedReason || (isClosed ? 'Paksa Tutup' : 'Buka Normal'),
+            currentStoreStatusData,
+            updatePayload,
+            adminEmail
+          );
+          tampilkanToast('Status operasional toko berhasil diperbarui!', 'success');
+          loadAdminStatusLogs();
+        } else {
+          tampilkanToast(res?.error || 'Gagal memperbarui status toko.', 'danger');
+        }
+      } catch (err) {
+        console.error('Save status error:', err);
+        tampilkanToast('Terjadi kesalahan saat menyimpan status.', 'danger');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function loadAdminStatusLogs() {
+      const tbody = document.getElementById('history-table-body');
+      if (!tbody) return;
+
+      try {
+        const logs = await window.firebaseManager?.loadStatusLogs?.(logHistoryLimit) || [];
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Belum ada riwayat perubahan status.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = logs.map(item => {
+          const dateStr = item.timestamp?.toDate ? new Date(item.timestamp.toDate()).toLocaleString('id-ID') : 'Baru saja';
+          const actionBadge = item.action === 'manual_close'
+            ? '<span class="badge bg-danger">🔴 Manual Tutup</span>'
+            : '<span class="badge bg-success">🟢 Normal Buka</span>';
+          return `
+            <tr>
+              <td><small class="fw-semibold">${dateStr}</small></td>
+              <td><small class="text-muted">${escapeHtml(item.adminEmail || 'admin')}</small></td>
+              <td>${actionBadge}</td>
+              <td><small class="text-muted">${escapeHtml(item.reason || '-')}</small></td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Load logs error:', e);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-3">Gagal memuat riwayat status.</td></tr>';
+      }
+    }
+
+    // Jalankan inisialisasi status admin
+    document.addEventListener('DOMContentLoaded', initAdminStoreStatus);
   </script>
 </body>
 </html>

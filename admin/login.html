@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Admin - Pempek Wahid</title>
   <link rel="icon" type="image/svg+xml" href="../images/logo.svg" />
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #fff7f2, #ffe7e7);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-  </style>
+  <!-- Custom Style -->
+  <link rel="stylesheet" href="../css/styles.css" />
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q04TMMKB68"></script>
   <script>
@@ -21,28 +24,28 @@
     gtag('js', new Date());
 
     gtag('config', 'G-Q04TMMKB68');
-</script>
+  </script>
 </head>
-<body>
-  <div class="container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="card border-0 shadow-lg rounded-4 p-4" style="max-width: 420px; width: 100%;">
-      <img src="../images/logo.svg" alt="Logo Pempek Wahid" class="auth-brand-logo mb-3">
-      <h3 class="fw-bold mb-2">Login Admin</h3>
-      <p class="text-muted small mb-4">Masukkan akun admin tunggal untuk mengakses panel review.</p>
+<body class="bg-light-custom">
+  <main class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="max-width: 420px; width: 100%;">
+      <img src="../images/logo.svg" alt="Logo Pempek Wahid" class="auth-brand-logo mb-3" width="84" height="84">
+      <h1 class="h3 fw-bold mb-2 text-center">Login Admin</h1>
+      <p class="text-muted small mb-4 text-center">Masukkan akun admin untuk mengakses panel manajemen Pempek Wahid.</p>
       <form id="adminLoginForm">
         <div class="mb-3">
-          <label class="form-label small fw-semibold">Email</label>
+          <label for="adminEmail" class="form-label small fw-semibold">Email</label>
           <input type="email" id="adminEmail" class="form-control" required />
         </div>
         <div class="mb-3">
-          <label class="form-label small fw-semibold">Password</label>
+          <label for="adminPassword" class="form-label small fw-semibold">Password</label>
           <input type="password" id="adminPassword" class="form-control" required />
         </div>
-        <button type="submit" id="loginBtn" class="btn btn-danger-custom w-100 rounded-pill">Masuk</button>
+        <button type="submit" id="loginBtn" class="btn btn-danger-custom w-100 rounded-pill py-2" aria-label="Masuk ke panel admin">Masuk</button>
       </form>
-      <p id="loginMessage" class="small mt-3 mb-0 text-danger"></p>
+      <p id="loginMessage" class="small mt-3 mb-0 text-danger text-center" aria-live="polite"></p>
     </div>
-  </div>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -55,7 +58,6 @@
     const message = document.getElementById('loginMessage');
     const loginBtn = document.getElementById('loginBtn');
 
-    // Jika sudah login di Firebase, langsung ke halaman admin
     window.firebaseManager?.onAuthStateChanged?.((user) => {
       if (user) {
         localStorage.setItem('adminLoggedIn', 'true');
@@ -75,18 +77,15 @@
         return;
       }
 
-      // Tampilkan loading state pada tombol
       loginBtn.disabled = true;
       loginBtn.textContent = 'Memproses...';
 
       try {
-        // firebase.js sudah menerjemahkan error ke Bahasa Indonesia
         const result = await window.firebaseManager?.signIn?.(email, password);
         if (result?.ok) {
           localStorage.setItem('adminLoggedIn', 'true');
           window.location.href = 'admin.html';
         } else {
-          // Pesan error sudah dalam Bahasa Indonesia dari terjemahkanErrorAuth()
           message.textContent = result?.error || 'Login gagal. Periksa email dan password Anda.';
         }
       } catch (error) {

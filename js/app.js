@@ -1,3 +1,79 @@
+// Menu katalog standar Pempek Wahid (termasuk menu baru: Pempek Pistel)
+const DEFAULT_PRODUCTS = [
+  {
+    id: 'pempek-telur',
+    name: 'Pempek Telur (Kapal Selam Kecil)',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek olahan ikan kakap dengan isian telur gurih, kenyal dan nikmat saat disiram cuko kental pedas manis.',
+    image: 'images/pempek_telur.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'pempek-lenjer',
+    name: 'Pempek Lenjer',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek lenjer lonjong klasik khas Palembang dengan cita rasa daging ikan kakap yang kaya dan gurih mantap.',
+    image: 'images/pempek_lenjer_putih.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'pempek-bulat',
+    name: 'Pempek Bulat (Adaan)',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek adaan bulat dengan aroma irisan daun bawang segar dan rempah gurih khas yang menggugah selera.',
+    image: 'images/pempek_bulat.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'pempek-pistel',
+    name: 'Pempek Pistel',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek khas berbentuk pastel dengan isian tumis pepaya muda (katis) gurih bumbu ebi yang lembut dan lezat.',
+    image: 'images/pempek_pistel.jpeg',
+    isSoldOut: false
+  },
+  {
+    id: 'pempek-kulit-lenjer',
+    name: 'Pempek Kulit Lenjer',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek olahan kulit ikan kakap bertekstur kenyal dengan gurih yang mantap, cocok dinikmati hangat.',
+    image: 'images/pempek_kulit_lenjer.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'pempek-kulit-gepeng',
+    name: 'Pempek Kulit Gepeng',
+    price: 1000,
+    category: 'satuan',
+    description: 'Pempek kulit pipih gurih beraroma mantap. (Khusus santap di outlet / dine-in, tidak untuk pesanan online).',
+    image: 'images/pempek_kulit_gepeng.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'paket-campur-20',
+    name: 'Paket Hemat Campur (20 Pcs)',
+    price: 20000,
+    category: 'paket',
+    description: 'Paket hemat 20 pcs aneka pempek kakap (Telur, Lenjer, Adaan, Pistel, Kulit) sudah termasuk 1 botol cuko kental.',
+    image: 'images/pempek_bulat.jpg',
+    isSoldOut: false
+  },
+  {
+    id: 'paket-campur-50',
+    name: 'Paket Pesta Puas (50 Pcs)',
+    price: 50000,
+    category: 'paket',
+    description: 'Paket lengkap 50 pcs aneka pempek kakap lezat dengan porsi cuko kental melimpah, pas untuk acara & kumpul keluarga.',
+    image: 'images/pempek_lenjer_putih.jpg',
+    isSoldOut: false
+  }
+];
+
 let products = [];
 
 // Mengambil elemen-elemen HTML yang dibutuhkan agar bisa diubah atau diisi secara dinamis.
@@ -49,22 +125,22 @@ function renderUlasanHtml(ulasan, container) {
 
   container.innerHTML = ulasan.map((item) => `
     <div class="col-12">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card border-0 rounded-4 h-100 shadow-sm">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div>
-              <h6 class="fw-bold mb-1">${escapeHtml(item.name || 'Pelanggan')}</h6>
+              <h3 class="h6 fw-bold mb-1">${escapeHtml(item.name || 'Pelanggan')}</h3>
               <div class="text-warning small">${'⭐'.repeat(Number(item.rating || 5))}</div>
             </div>
             <span class="badge bg-danger-subtle text-danger rounded-pill">${item.rating || 5}/5</span>
           </div>
           <p class="text-muted small mb-2">${escapeHtml(item.comment || '')}</p>
           ${item.photoUrl
-            ? `<img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan" class="review-photo-thumb mb-2" loading="lazy">`
+            ? `<img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan dari ${escapeHtml(item.name || 'Pelanggan')}" class="review-photo-thumb mb-2" width="300" height="180" loading="lazy">`
             : ''}
           ${item.reply
-            ? `<div class="border rounded-3 p-3 bg-light">
-                <div class="fw-semibold small text-danger mb-1"><i class="bi bi-reply-fill me-1"></i>Balasan Pempek Wahid</div>
+            ? `<div class="border rounded-3 p-3 bg-light-custom">
+                <div class="fw-semibold small text-danger mb-1"><i class="bi bi-reply-fill me-1" aria-hidden="true"></i>Balasan Pempek Wahid</div>
                 <p class="mb-0 small text-muted">${escapeHtml(item.reply)}</p>
               </div>`
             : ''}
@@ -103,7 +179,7 @@ async function kirimUlasan(event) {
     return;
   }
 
-  // v1.1: Anti-spam honeypot check — batalkan jika field tersembunyi terisi
+  // Anti-spam honeypot check
   const honeypot = document.getElementById('hp_website_url');
   if (honeypot && honeypot.value.trim() !== '') {
     console.warn('[Review] Spam terdeteksi melalui honeypot. Pengiriman dibatalkan.');
@@ -123,7 +199,7 @@ async function kirimUlasan(event) {
   const tombol = form.querySelector('button[type="submit"]');
   if (tombol) {
     tombol.disabled = true;
-    tombol.innerHTML = '<span class="me-2"><i class="bi bi-cloud-arrow-up-fill"></i></span>Menyimpan...';
+    tombol.innerHTML = '<span class="me-2"><i class="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i></span>Menyimpan...';
   }
 
   try {
@@ -148,7 +224,7 @@ async function kirimUlasan(event) {
   } finally {
     if (tombol) {
       tombol.disabled = false;
-      tombol.innerHTML = '<i class="bi bi-send-fill me-1"></i> Kirim Ulasan';
+      tombol.innerHTML = '<i class="bi bi-send-fill me-1" aria-hidden="true"></i> Kirim Ulasan';
     }
     setTimeout(() => {
       reviewSubmitCooldown = false;
@@ -168,8 +244,8 @@ function tampilkanProduk(itemProduk) {
     gridProduk.innerHTML = `
       <div class="col-12">
         <div class="text-center py-5 text-muted">
-          <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-          <h5 class="fw-semibold">Belum ada menu tersedia</h5>
+          <i class="bi bi-inbox fs-1 d-block mb-3" aria-hidden="true"></i>
+          <h3 class="h5 fw-semibold">Belum ada menu tersedia</h3>
           <p class="small">Menu akan muncul di sini setelah admin menambahkannya melalui panel admin.</p>
         </div>
       </div>
@@ -182,25 +258,24 @@ function tampilkanProduk(itemProduk) {
     const kolom = document.createElement('div');
     kolom.className = 'col-sm-6 col-lg-4';
 
-    // v1.1: Tampilkan badge "Stok Habis" jika produk tidak tersedia
     const isSoldOut = Boolean(produk.isSoldOut);
 
     kolom.innerHTML = `
-      <div class="card border-0 shadow-sm rounded-4 h-100 product-card${isSoldOut ? ' sold-out' : ''}">
+      <div class="card border-0 rounded-4 h-100 product-card${isSoldOut ? ' sold-out' : ''}">
         <div class="position-relative">
-          <img src="${escapeHtml(produk.image || '')}" class="card-img-top rounded-top-4 product-image" alt="${escapeHtml(produk.name)}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
-          ${isSoldOut ? '<span class="badge-sold-out"><i class="bi bi-x-circle-fill me-1"></i>Stok Habis</span>' : ''}
+          <img src="${escapeHtml(produk.image || '')}" class="card-img-top rounded-top-4 product-image" alt="${escapeHtml(produk.name)}" width="300" height="220" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'">
+          ${isSoldOut ? '<span class="badge-sold-out"><i class="bi bi-x-circle-fill me-1" aria-hidden="true"></i>Stok Habis</span>' : ''}
         </div>
         <div class="card-body d-flex flex-column">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-            <h5 class="fw-bold mb-0">${escapeHtml(produk.name)}</h5>
+            <h3 class="h5 fw-bold mb-0">${escapeHtml(produk.name)}</h3>
             <span class="badge bg-danger-subtle text-danger rounded-pill">${formatHarga(produk.price)}</span>
           </div>
           <p class="text-muted small mb-3">${escapeHtml(produk.description || '')}</p>
           <div class="mt-auto d-flex gap-2">
-            <button class="btn btn-outline-dark rounded-pill px-3 btn-sm detail-btn" data-id="${escapeHtml(String(produk.id))}">Lihat Detail</button>
-            <button class="btn btn-danger-custom rounded-pill px-3 btn-sm add-cart-btn" data-id="${escapeHtml(String(produk.id))}"${isSoldOut ? ' disabled title="Stok habis"' : ''}>
-              ${isSoldOut ? '<i class="bi bi-x-circle me-1"></i>Stok Habis' : 'Tambah'}
+            <button class="btn btn-outline-dark rounded-pill px-3 btn-sm detail-btn" data-id="${escapeHtml(String(produk.id))}" aria-label="Lihat detail ${escapeHtml(produk.name)}">Lihat Detail</button>
+            <button class="btn btn-danger-custom rounded-pill px-3 btn-sm add-cart-btn" data-id="${escapeHtml(String(produk.id))}"${isSoldOut ? ' disabled title="Stok habis"' : ''} aria-label="Tambah ${escapeHtml(produk.name)} ke keranjang">
+              ${isSoldOut ? '<i class="bi bi-x-circle me-1" aria-hidden="true"></i>Stok Habis' : 'Tambah'}
             </button>
           </div>
         </div>
@@ -221,7 +296,6 @@ function pasangAksiProduk() {
 
   tombolDetail.forEach((button) => {
     button.addEventListener('click', () => {
-      // Selalu bandingkan sebagai String karena Firebase ID adalah string alfanumerik
       const produk = products.find((item) => String(item.id) === String(button.dataset.id));
       if (!produk) return;
 
@@ -239,13 +313,12 @@ function pasangAksiProduk() {
       gambarModal.onerror = function () { this.onerror = null; this.src = FALLBACK_IMAGE; };
       tombolTambahModal.dataset.id = String(produk.id);
 
-      // v1.1: Nonaktifkan tombol tambah modal jika stok habis
       if (produk.isSoldOut) {
         tombolTambahModal.disabled = true;
-        tombolTambahModal.innerHTML = '<i class="bi bi-x-circle me-1"></i> Stok Habis';
+        tombolTambahModal.innerHTML = '<i class="bi bi-x-circle me-1" aria-hidden="true"></i> Stok Habis';
       } else {
         tombolTambahModal.disabled = false;
-        tombolTambahModal.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Tambah Ke Keranjang';
+        tombolTambahModal.innerHTML = '<i class="bi bi-cart-plus me-1" aria-hidden="true"></i> Tambah Ke Keranjang';
       }
 
       const modal = new bootstrap.Modal(document.getElementById('productModal'));
@@ -271,7 +344,6 @@ function tambahKeKeranjang(idProduk) {
   const produk = products.find((item) => String(item.id) === String(idProduk));
   if (!produk) return;
 
-  // v1.1: Tolak produk dengan status stok habis
   if (produk.isSoldOut) {
     tampilkanToast(`${produk.name} sedang tidak tersedia (stok habis).`, 'danger');
     return;
@@ -282,7 +354,6 @@ function tambahKeKeranjang(idProduk) {
     return;
   }
 
-  // Cek apakah produk itu sudah ada di keranjang atau merupakan item baru.
   const itemYangAda = keranjang.find((item) => String(item.id) === String(idProduk));
   const itemBaru = !itemYangAda;
 
@@ -292,10 +363,8 @@ function tambahKeKeranjang(idProduk) {
     keranjang.push({ ...produk, qty: 1 });
   }
 
-  // Tampilkan update keranjang secara real time.
   tampilkanKeranjang();
 
-  // Hanya buka drawer jika produk baru pertama kali ditambahkan.
   if (itemBaru) {
     bukaDrawerKeranjang();
   }
@@ -321,7 +390,6 @@ function ubahJumlahKeranjang(idProduk, selisih) {
 function tampilkanKeranjang() {
   if (!daftarItemKeranjang) return;
 
-  // Kosongkan dahulu agar isi terbaru bisa ditulis ulang.
   daftarItemKeranjang.innerHTML = '';
 
   if (keranjang.length === 0) {
@@ -331,7 +399,6 @@ function tampilkanKeranjang() {
     return;
   }
 
-  // Buat satu baris untuk tiap item keranjang.
   keranjang.forEach((item) => {
     const barisItem = document.createElement('div');
     barisItem.className = 'd-flex justify-content-between align-items-center border-bottom py-2 gap-3';
@@ -341,22 +408,20 @@ function tampilkanKeranjang() {
         <small class="text-muted">${formatHarga(item.price)} / pcs</small>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="decrease" data-id="${escapeHtml(String(item.id))}" aria-label="Kurangi qty">-</button>
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="decrease" data-id="${escapeHtml(String(item.id))}" aria-label="Kurangi qty ${escapeHtml(item.name)}">-</button>
         <span class="fw-bold text-dark min-width-qty">${item.qty}</span>
-        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="increase" data-id="${escapeHtml(String(item.id))}" aria-label="Tambah qty">+</button>
+        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" data-cart-action="increase" data-id="${escapeHtml(String(item.id))}" aria-label="Tambah qty ${escapeHtml(item.name)}">+</button>
       </div>
-      <div class="fw-bold text-danger">${formatHarga(item.price * item.qty)}</div>
+      <div class="fw-bold text-danger-custom">${formatHarga(item.price * item.qty)}</div>
     `;
     daftarItemKeranjang.appendChild(barisItem);
   });
 
-  // Hitung total qty dan total harga dari seluruh item di keranjang.
   const totalQty = keranjang.reduce((sum, item) => sum + item.qty, 0);
   const total = keranjang.reduce((sum, item) => sum + item.price * item.qty, 0);
   badgeJumlahKeranjang.textContent = String(totalQty);
   tampilanTotalKeranjang.textContent = formatHarga(total);
 
-  // Jika qty masih di bawah minimum, tampilkan notifikasi agar pelanggan tahu.
   if (totalQty < PEMESANAN_MINIMAL) {
     const pemberitahuanMinimal = document.createElement('div');
     pemberitahuanMinimal.className = 'alert alert-danger rounded-3 small mt-3 mb-0';
@@ -409,12 +474,10 @@ function filterProduk() {
   tampilkanProduk(hasilFilter);
 }
 
-// Saat pengguna mengetik di pencarian, langsung filter daftar produk.
 if (inputCari) {
   inputCari.addEventListener('input', filterProduk);
 }
 
-// Saat tombol kategori diklik, ubah filter dan tampilkan produk yang cocok.
 tombolFilter.forEach((button) => {
   button.addEventListener('click', () => {
     filterSaatIni = button.dataset.category;
@@ -424,7 +487,6 @@ tombolFilter.forEach((button) => {
   });
 });
 
-// v1.1: Highlight delivery option card yang aktif saat radio dipilih
 document.addEventListener('change', (e) => {
   if (e.target.name === 'deliveryMethod') {
     document.querySelectorAll('.delivery-option-card').forEach((card) => {
@@ -437,7 +499,6 @@ document.addEventListener('change', (e) => {
   }
 });
 
-// Saat pertama kali halaman dimuat, highlight kartu yang sudah terpilih
 document.addEventListener('DOMContentLoaded', () => {
   const checkedInput = document.querySelector('input[name="deliveryMethod"]:checked');
   if (checkedInput) {
@@ -445,17 +506,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Saat tombol tambah dari modal ditekan, ambil id produk lalu masukkan ke keranjang.
 document.getElementById('modalAddToCartBtn')?.addEventListener('click', () => {
   const idProduk = String(document.getElementById('modalAddToCartBtn').dataset.id);
   tambahKeKeranjang(idProduk);
   bootstrap.Modal.getInstance(document.getElementById('productModal'))?.hide();
 });
 
-// Saat form review dikirim, simpan ke Firestore.
 document.getElementById('addReviewForm')?.addEventListener('submit', kirimUlasan);
 
-// v1.1: Tombol bagikan website (Social Share Button)
 document.getElementById('shareWebsiteBtn')?.addEventListener('click', async () => {
   const shareData = {
     title: 'Pempek Wahid - Ikan Kakap Asli Rp 1.000',
@@ -464,16 +522,13 @@ document.getElementById('shareWebsiteBtn')?.addEventListener('click', async () =
   };
 
   try {
-    // Coba gunakan Web Share API jika didukung browser
     if (navigator.share) {
       await navigator.share(shareData);
     } else {
-      // Fallback: Salin tautan ke clipboard
       await navigator.clipboard.writeText(window.location.href);
       tampilkanToast('Tautan berhasil disalin ke clipboard!', 'success');
     }
   } catch (error) {
-    // Jika Web Share dibatalkan user, abaikan. Jika error lain, coba clipboard
     if (error.name !== 'AbortError') {
       try {
         await navigator.clipboard.writeText(window.location.href);
@@ -485,7 +540,6 @@ document.getElementById('shareWebsiteBtn')?.addEventListener('click', async () =
   }
 });
 
-// Saat tombol checkout di klik, cek syarat minimum order lalu kirim pesanan ke WhatsApp.
 tombolCheckoutWhatsApp?.addEventListener('click', () => {
   if (keranjang.length === 0) {
     tampilkanToast('Keranjang masih kosong. Tambahkan pempek sebelum checkout.', 'danger');
@@ -493,7 +547,6 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
     return;
   }
 
-  // v1.1: Hard-check di sisi JavaScript (tidak dapat di-bypass dari console)
   const totalQty = keranjang.reduce((sum, item) => sum + item.qty, 0);
   if (totalQty < PEMESANAN_MINIMAL) {
     tampilkanToast(`Minimum pemesanan adalah ${PEMESANAN_MINIMAL} pcs. Saat ini anda baru memilih ${totalQty} pcs.`, 'danger');
@@ -501,7 +554,6 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
     return;
   }
 
-  // v1.1: Ambil metode pengiriman yang dipilih
   const metodePengiriman = document.querySelector('input[name="deliveryMethod"]:checked')?.value || 'ambil_sendiri';
   const labelMetode = metodePengiriman === 'ambil_sendiri'
     ? '🏪 Ambil Sendiri ke Outlet'
@@ -515,21 +567,48 @@ tombolCheckoutWhatsApp?.addEventListener('click', () => {
   const pesan = encodeURIComponent(
     `Halo Pempek Wahid, saya ingin melakukan pemesanan.\n\n\n${daftarPesanan}\n\n- Nama: ${nama}\n- Metode Pengiriman: ${labelMetode}\n- Alamat Lengkap: ${catatan}\n- Nomor HP: \n- Pesanan: \n- Total: ${formatHarga(total)}\n\nMohon untuk dikonfirmasi kembali terkait pesanan dan total pembayaran.\n\n*Catatan:* Untuk pemesanan di area sekitar Palembang, pempek disiapkan dalam kondisi *rebus (tidak digoreng)* untuk menjaga kualitas selama pengantaran. Pempek Kulit Gepeng tidak tersedia untuk pemesanan online karena tidak direbus, sehingga lebih mudah lengket dan cepat basi.`
   );
-  window.open(`https://wa.me/6288287041072?text=${pesan}`, '_blank');
+  window.open(`https://wa.me/6288287041072?text=${pesan}`, '_blank', 'noopener,noreferrer');
 });
+
+let storeStatusManager = null;
+
+function initStoreStatus() {
+  if (typeof window.StoreStatusManager === 'function') {
+    storeStatusManager = new window.StoreStatusManager();
+    const initialStatus = storeStatusManager.determineStatus(window.currentStoreStatus || {});
+    storeStatusManager.updateUI(initialStatus);
+    storeStatusManager.startMonitoring();
+
+    if (window.firebaseManager?.onSnapshotStoreStatus) {
+      window.firebaseManager.onSnapshotStoreStatus((statusData) => {
+        window.currentStoreStatus = statusData || {};
+        const statusObj = storeStatusManager.determineStatus(window.currentStoreStatus);
+        storeStatusManager.updateUI(statusObj);
+      });
+    }
+  }
+}
 
 async function initApp() {
   console.log('[App] Inisialisasi aplikasi...');
+  initStoreStatus();
+
   if (gridProduk) {
-    gridProduk.innerHTML = '<div class="col-12 text-center text-muted py-5"><div class="spinner-border text-danger mb-3" role="status"></div><br>Memuat katalog menu dari Firebase...</div>';
+    gridProduk.innerHTML = '<div class="col-12 text-center text-muted py-5"><div class="spinner-border text-danger me-2" role="status"></div><br>Memuat katalog menu Pempek Wahid...</div>';
   }
 
   try {
-    products = await window.firebaseManager?.loadMenu?.() || [];
-    console.log('[App] Produk dimuat:', products.length, 'item');
+    const firestoreProducts = await window.firebaseManager?.loadMenu?.();
+    if (firestoreProducts && firestoreProducts.length > 0) {
+      products = firestoreProducts;
+      console.log('[App] Produk dimuat dari Firestore:', products.length, 'item');
+    } else {
+      console.log('[App] Menggunakan katalog default (termasuk Pempek Pistel)');
+      products = [...DEFAULT_PRODUCTS];
+    }
   } catch (e) {
-    console.error('[App] Gagal memuat produk:', e);
-    products = [];
+    console.warn('[App] Firebase offline / error, memuat katalog standar:', e);
+    products = [...DEFAULT_PRODUCTS];
   }
 
   tampilkanProduk(products);
@@ -537,7 +616,6 @@ async function initApp() {
   muatUlasan();
 }
 
-// Guard: Tunggu seluruh resource (termasuk SDK Firebase) selesai dimuat sebelum inisialisasi
 if (document.readyState === 'complete') {
   initApp();
 } else {

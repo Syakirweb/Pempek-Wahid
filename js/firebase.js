@@ -300,6 +300,122 @@
     }
   }
 
+  // --- STORE STATUS & AUDIT LOG FUNCTIONS ---
+  function onSnapshotStoreStatus(callback) {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) {
+      console.warn('[Firestore] Tidak bisa onSnapshotStoreStatus: Firestore belum siap.');
+      if (callback) callback({});
+      return () => {};
+    }
+
+    const docRef = db.collection('settings').doc('store_status');
+    return docRef.onSnapshot(
+      (docSnap) => {
+        if (docSnap.exists) {
+          callback(docSnap.data());
+        } else {
+          // Default initial data
+          const defaultData = {
+            isClosed: false,
+            closedReason: '',
+            closedReasonType: 'none',
+            operatingHoursStart: 16,
+            operatingHoursEnd: 18,
+            timezone: 'Asia/Jakarta',
+            closedDays: ['minggu']
+          };
+          callback(defaultData);
+        }
+      },
+      (error) => {
+        console.error('[Firestore] onSnapshotStoreStatus error:', error);
+        callback({});
+      }
+    );
+  }
+
+  async function getStoreStatus() {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) return null;
+
+    try {
+      const docSnap = await db.collection('settings').doc('store_status').get();
+      if (docSnap.exists) {
+        return docSnap.data();
+      }
+      return null;
+    } catch (error) {
+      console.error('[Firestore] Gagal getStoreStatus:', error);
+      return null;
+    }
+  }
+
+  async function updateStoreStatus(updateData, adminEmail = 'admin@pempekwahid.com') {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) return { ok: false, error: 'Firestore belum siap.' };
+
+    try {
+      const docRef = db.collection('settings').doc('store_status');
+      const payload = {
+        ...updateData,
+        timezone: 'Asia/Jakarta',
+        lastUpdatedBy: adminEmail,
+        lastUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await docRef.set(payload, { merge: true });
+      return { ok: true };
+    } catch (error) {
+      console.error('[Firestore] Gagal updateStoreStatus:', error);
+      const errMsg = error.code === 'permission-denied'
+        ? 'Akses ditolak (Missing or insufficient permissions). Pastikan Anda telah login sebagai Admin dan memperbarui Firestore Rules di Firebase Console.'
+        : error.message;
+      return { ok: false, error: errMsg };
+    }
+  }
+
+  async function logStatusChange(action, reason, previousState, newState, adminEmail = 'admin@pempekwahid.com') {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) return { ok: false, error: 'Firestore belum siap.' };
+
+    try {
+      await db.collection('admin').doc('status_logs').collection('logs').add({
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        adminEmail: adminEmail,
+        action: action,
+        reason: reason || '',
+        previousState: previousState || {},
+        newState: newState || {}
+      });
+      return { ok: true };
+    } catch (error) {
+      console.error('[Firestore] Gagal logStatusChange:', error);
+      const errMsg = error.code === 'permission-denied'
+        ? 'Akses ditolak (Missing or insufficient permissions). Perbarui Firestore Rules di Firebase Console.'
+        : error.message;
+      return { ok: false, error: errMsg };
+    }
+  }
+
+  async function loadStatusLogs(limitCount = 10) {
+    const { db, firestoreReady } = initFirebase();
+    if (!firestoreReady || !db) return [];
+
+    try {
+      const snapshot = await db.collection('admin')
+        .doc('status_logs')
+        .collection('logs')
+        .orderBy('timestamp', 'desc')
+        .limit(limitCount)
+        .get();
+
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('[Firestore] Gagal loadStatusLogs:', error);
+      return [];
+    }
+  }
+
   // --- AUTHENTICATION ---
   // Mapping kode error Firebase ke pesan Bahasa Indonesia
   const pesanErrorAuth = {
@@ -375,6 +491,11 @@
     updateProductStock,
     uploadImage,
     uploadReviewPhoto,
+    onSnapshotStoreStatus,
+    getStoreStatus,
+    updateStoreStatus,
+    logStatusChange,
+    loadStatusLogs,
     signIn,
     signOut,
     onAuthStateChanged,

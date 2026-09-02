@@ -27,9 +27,11 @@ function initStarRatingPicker() {
       if (starVal <= rating) {
         star.classList.remove('bi-star', 'text-muted');
         star.classList.add('bi-star-fill', 'text-warning');
+        star.setAttribute('aria-checked', 'true');
       } else {
         star.classList.remove('bi-star-fill', 'text-warning');
         star.classList.add('bi-star', 'text-muted');
+        star.setAttribute('aria-checked', 'false');
       }
     });
 
@@ -50,6 +52,14 @@ function initStarRatingPicker() {
     star.addEventListener('click', () => {
       const val = Number(star.dataset.value);
       updateStars(val);
+    });
+
+    star.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const val = Number(star.dataset.value);
+        updateStars(val);
+      }
     });
 
     star.addEventListener('mouseenter', () => {
@@ -108,9 +118,9 @@ function renderReviews(ulasan) {
   if (!ulasan || ulasan.length === 0) {
     container.innerHTML = `
       <div class="col-12 text-center py-5">
-        <div class="card border-0 shadow-sm rounded-4 p-5">
-          <i class="bi bi-chat-left-quote fs-1 text-muted mb-3 d-block"></i>
-          <h5 class="fw-bold">Belum Ada Ulasan yang Cocok</h5>
+        <div class="card border-0 rounded-4 p-5 shadow-sm">
+          <i class="bi bi-chat-left-quote fs-1 text-muted mb-3 d-block" aria-hidden="true"></i>
+          <h3 class="h5 fw-bold">Belum Ada Ulasan yang Cocok</h3>
           <p class="text-muted small">Coba ubah kata kunci pencarian atau filter yang Anda pilih.</p>
         </div>
       </div>
@@ -129,7 +139,7 @@ function renderReviews(ulasan) {
 
     return `
       <div class="col-12 col-md-6 mb-3">
-        <div class="card border-0 shadow-sm rounded-4 h-100 review-card">
+        <div class="card border-0 rounded-4 h-100 review-card shadow-sm">
           <div class="card-body p-4 d-flex flex-column">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
               <div class="d-flex align-items-center gap-2">
@@ -137,7 +147,7 @@ function renderReviews(ulasan) {
                   ${(item.name || 'P').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h6 class="fw-bold mb-0">${escapeHtml(item.name || 'Pelanggan')}</h6>
+                  <h3 class="h6 fw-bold mb-0">${escapeHtml(item.name || 'Pelanggan')}</h3>
                   <span class="text-muted font-xs">${formattedDate}</span>
                 </div>
               </div>
@@ -146,7 +156,7 @@ function renderReviews(ulasan) {
               </span>
             </div>
 
-            <div class="text-warning mb-2 small">
+            <div class="text-warning mb-2 small" aria-label="${item.rating || 5} dari 5 bintang">
               ${'★'.repeat(Number(item.rating || 5))}${'☆'.repeat(5 - Number(item.rating || 5))}
             </div>
 
@@ -155,7 +165,7 @@ function renderReviews(ulasan) {
             ${
               item.photoUrl
                 ? `<div class="mb-3">
-                    <img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan pelanggan" class="review-photo-thumb" loading="lazy">
+                    <img src="${escapeHtml(item.photoUrl)}" alt="Foto ulasan dari ${escapeHtml(item.name || 'Pelanggan')}" class="review-photo-thumb" width="300" height="180" loading="lazy">
                    </div>`
                 : ''
             }
@@ -164,7 +174,7 @@ function renderReviews(ulasan) {
               item.reply
                 ? `<div class="border rounded-3 p-3 bg-light-custom mt-auto">
                     <div class="d-flex align-items-center gap-1 fw-bold small text-danger mb-1">
-                      <i class="bi bi-reply-fill"></i> Balasan Pempek Wahid
+                      <i class="bi bi-reply-fill" aria-hidden="true"></i> Balasan Pempek Wahid
                     </div>
                     <p class="mb-0 small text-muted">${escapeHtml(item.reply)}</p>
                   </div>`
@@ -177,7 +187,6 @@ function renderReviews(ulasan) {
   }).join('');
 }
 
-// v1.1: Multi-filter & Sorting Logic untuk Publik
 function applyPublicFilters() {
   const keyword = (document.getElementById('searchReviewInput')?.value || '').toLowerCase().trim();
   const ratingFilter = document.getElementById('filterRatingSelect')?.value || 'all';
@@ -185,13 +194,8 @@ function applyPublicFilters() {
   const sortOption = document.getElementById('sortReviewSelect')?.value || 'newest';
 
   let filtered = reviewListCache.filter((item) => {
-    // Search keyword check
     const matchesSearch = (item.name || '').toLowerCase().includes(keyword) || (item.comment || '').toLowerCase().includes(keyword);
-
-    // Rating filter check
     const matchesRating = ratingFilter === 'all' || String(item.rating || 5) === String(ratingFilter);
-
-    // Reply status filter check
     const matchesReply = replyFilter === 'all'
       || (replyFilter === 'replied' && Boolean(item.reply))
       || (replyFilter === 'unreplied' && !item.reply);
@@ -199,7 +203,6 @@ function applyPublicFilters() {
     return matchesSearch && matchesRating && matchesReply;
   });
 
-  // Sorting
   filtered.sort((a, b) => {
     const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
     const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
@@ -228,7 +231,6 @@ function listenAllReviews() {
   `;
 
   if (window.firebaseManager?.onSnapshotReviews) {
-    // Memanggil realtime listener Firestore TANPA limit untuk menampilkan semua ulasan
     window.firebaseManager.onSnapshotReviews((ulasan) => {
       reviewListCache = ulasan;
       updateReviewStats(ulasan);
@@ -252,7 +254,6 @@ function pasangFormUlasan() {
 
     if (isSubmitting) return;
 
-    // v1.1: Anti-Spam Honeypot Check
     const honeypot = document.getElementById('hp_website_url');
     if (honeypot && honeypot.value.trim() !== '') {
       console.warn('[ReviewPage] Honeypot terisi. Pengiriman dibatalkan.');
@@ -282,7 +283,6 @@ function pasangFormUlasan() {
         comment: komentar
       };
 
-      // Memanggil fungsi saveReview
       const result = await window.firebaseManager?.saveReview?.(reviewPayload);
 
       if (result?.ok) {
@@ -299,7 +299,7 @@ function pasangFormUlasan() {
       isSubmitting = false;
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="bi bi-send-fill me-2"></i>Kirim Ulasan Sekarang';
+        btnSubmit.innerHTML = '<i class="bi bi-send-fill me-2" aria-hidden="true"></i>Kirim Ulasan Sekarang';
       }
     }
   });
@@ -330,7 +330,6 @@ function initReviewsPage() {
   listenAllReviews();
   pasangFormUlasan();
 
-  // Attach filter & sort event listeners
   document.getElementById('searchReviewInput')?.addEventListener('input', applyPublicFilters);
   document.getElementById('filterRatingSelect')?.addEventListener('change', applyPublicFilters);
   document.getElementById('filterReplySelect')?.addEventListener('change', applyPublicFilters);

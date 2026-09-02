@@ -9,7 +9,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <!-- Firebase Compat CDN -->
@@ -1161,11 +1161,12 @@ const FIREBASE_CONFIG = {
   measurementId: 'G-1D5N5PP7K4'
 };
 
-// 5 produk asli Pempek Wahid
+// 6 produk asli Pempek Wahid
 const PRODUCTS = [
   { name: 'Pempek Telur (Kapal Selam)', price: 1000 },
   { name: 'Pempek Lenjer',              price: 1000 },
   { name: 'Pempek Bulat (Adaan)',       price: 1000 },
+  { name: 'Pempek Pistel',              price: 1000 },
   { name: 'Pempek Kulit Lenjer',        price: 1000 },
   { name: 'Pempek Kulit Gepeng',        price: 1000 },
 ];
@@ -1713,6 +1714,7 @@ async function seedData(days) {
           'Pempek Telur (Kapal Selam)': 'Telur',
           'Pempek Lenjer': 'Lenjer',
           'Pempek Bulat (Adaan)': 'Adaan',
+          'Pempek Pistel': 'Pistel',
           'Pempek Kulit Lenjer': 'K.Lenjer',
           'Pempek Kulit Gepeng': 'K.Gepeng'
         };
